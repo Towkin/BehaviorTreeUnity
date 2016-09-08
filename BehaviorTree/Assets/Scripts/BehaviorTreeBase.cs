@@ -1,21 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System;
 
 public enum BehaviorState {
     Success,
     Failure,
-    Running
+    Running,
+    Error
 }
 
 public class BehaviorTree<T> {
-    private BehaviorNode mRootNode;
-    protected BehaviorNode RootNode {
+    private BTNode mRootNode;
+    public BTNode RootNode {
         get { return mRootNode; }
         set { mRootNode = value; }
     }
-    private BehaviorBlackboard mBlackboard;
-    public BehaviorBlackboard Blackboard {
+    private BTBlackboard mBlackboard = new BTBlackboard();
+    public BTBlackboard Blackboard {
         get { return mBlackboard; }
     }
 
@@ -31,8 +31,13 @@ public class BehaviorTree<T> {
         private set { mIsRunning = value; }
     }
 
+    private BehaviorTree() { }
+    public BehaviorTree(T aAgent) {
+        Agent = aAgent;
+    }
+    
     /// <summary>
-    /// Updates the root node of the tree.
+    /// Updates the root node of the tree, and locks itself while running.
     /// </summary>
     public void UpdateTree() {
         if(!IsRunning && RootNode != null) {
@@ -44,39 +49,26 @@ public class BehaviorTree<T> {
     }
 }
 
-public class BehaviorBlackboard {
+public class BTBlackboard {
     private Dictionary<string, object> mObjects = new Dictionary<string, object>();
     public Dictionary<string, object> Objects {
         get { return mObjects; }
     }
-    
-    //private Dictionary<string, Transform> mTransforms = new Dictionary<string, Transform>();
-    //public Transform GetTransformData(string aName) {
-    //    try {
-    //        return mTransforms[aName];
-    //    } catch(KeyNotFoundException E) {
-    //        Debug.LogException(E);
-    //        return null;
-    //    }
-    //}
-    //public void SetTransformData(string aName, Transform aTransform) {
-    //    mTransforms[aName] = aTransform;
-    //}
-    //private Dictionary<string, Vector3> mVector3s = new Dictionary<string, Vector3>();
-    //private Dictionary<string, float> mFloats = new Dictionary<string, float>();
-    //private Dictionary<string, int> mInts = new Dictionary<string, int>();
 }
 
-public abstract class BehaviorNode {
+public abstract class BTNode {
     protected string mName = "Node";
     public string Name {
         get { return mName; }
+    }
+    public override string ToString() {
+        return Name;
     }
     public abstract BehaviorState UpdateNode();
 }
 
 // --- Composites ---
-public abstract class BehaviorComposite : BehaviorNode {
+public abstract class BTComposite : BTNode {
     private int mChildIndex = 0;
     protected new string mName = "Composite";
     /// <summary>
@@ -86,16 +78,16 @@ public abstract class BehaviorComposite : BehaviorNode {
         get { return mChildIndex; }
         protected set { mChildIndex = value; }
     }
-    private List<BehaviorNode> mChildNodes = new List<BehaviorNode>();
-    protected List<BehaviorNode> ChildNodes {
+    private List<BTNode> mChildNodes = new List<BTNode>();
+    protected List<BTNode> ChildNodes {
         get { return mChildNodes; }
     }
-    public void AddNode(BehaviorNode aNewNode) {
+    public void AddNode(BTNode aNewNode) {
         if(aNewNode != null) {
             ChildNodes.Add(aNewNode);
         }
     }
-    public void RemoveNode(BehaviorNode aNode) {
+    public void RemoveNode(BTNode aNode) {
         ChildNodes.Remove(aNode);
     }
     public void RemoveNode(int aIndex) {
@@ -105,8 +97,8 @@ public abstract class BehaviorComposite : BehaviorNode {
         ChildNodes.RemoveAt(aIndex);
     }
 }
-public class BehaviorSequence : BehaviorComposite {
-    protected new string mName = "Sequence";
+public class BTComp_Sequence : BTComposite {
+    protected new string mName = "Composite: Sequence";
     /// <summary>
     /// Iterates through child nodes. 
     /// Break execution on Failure, pauses execution on Running, return Success if all children succeed.
@@ -126,6 +118,12 @@ public class BehaviorSequence : BehaviorComposite {
                 
                 return BehaviorState.Running;
             }
+            if(NodeState == BehaviorState.Error)
+            {
+                // TODO: Debug friendly error.
+
+                return BehaviorState.Error;
+            }
 
             // Iterate
             ChildIndex++;
@@ -137,8 +135,8 @@ public class BehaviorSequence : BehaviorComposite {
         return BehaviorState.Success;
     }
 }
-public class BehaviorSelector : BehaviorComposite {
-    protected new string mName = "Selector";
+public class BTComp_Selector : BTComposite {
+    protected new string mName = "Composite: Selector";
     /// <summary>
     /// Iterates through child nodes.
     /// Breaks exectution on Success, pauses execution on Running, return Failure if all children fail.
@@ -157,6 +155,12 @@ public class BehaviorSelector : BehaviorComposite {
 
                 return BehaviorState.Running;
             }
+            if (NodeState == BehaviorState.Error)
+            {
+                // TODO: Debug friendly error.
+
+                return BehaviorState.Error;
+            }
 
             // Iterate
             ChildIndex++;
@@ -168,31 +172,62 @@ public class BehaviorSelector : BehaviorComposite {
 }
 
 // --- Decorators ---
-public abstract class BehaviorDecorator : BehaviorNode {
+public abstract class BTDecorator : BTNode {
     protected new string mName = "Decorator";
-    private BehaviorNode mNode;
-    public BehaviorNode Node {
+    private BTNode mNode = null;
+    public BTNode Node {
         get { return mNode; }
     }
-
-    protected BehaviorDecorator(BehaviorNode aDecoratedNode) {
+    
+    protected BTDecorator(BTNode aDecoratedNode) {
         mNode = aDecoratedNode;
+    }
+}
+public class BTDeco_Inverter : BTDecorator {
+    protected new string mName = "Decorator: Inverter";
+
+    public BTDeco_Inverter(BTNode aDecoratedNode) : base(aDecoratedNode) { }
+
+    public override BehaviorState UpdateNode() {
+        if(Node == null) {
+            return BehaviorState.Error;
+        }
+
+        BehaviorState ChildState = Node.UpdateNode();
+
+        if(ChildState == BehaviorState.Running || ChildState == BehaviorState.Error) {
+            return ChildState;
+        }
+
+        if(ChildState == BehaviorState.Success) {
+            return BehaviorState.Failure;
+        }
+        return BehaviorState.Success;
     }
 }
 
 // --- Leafs ---
-public abstract class BehaviorLeaf<T> : BehaviorNode {
+public abstract class BTLeaf<T> : BTNode {
     protected new string mName = "Leaf";
     private BehaviorTree<T> mBehaviorTree = null;
-    protected BehaviorBlackboard Blackboard {
+    protected BTBlackboard Blackboard {
         get { return mBehaviorTree.Blackboard; }
     }
     protected T Agent {
         get { return mBehaviorTree.Agent; }
     }
-}
 
-public class BTConditional_InDistance : BehaviorLeaf<GameObject> {
+    // Default constructor uncallable.
+    private BTLeaf() { }
+    protected BTLeaf(BehaviorTree<T> aBehaviorTree) {
+        mBehaviorTree = aBehaviorTree;
+    }
+}
+public abstract class BTCondition<T> : BTLeaf<T> {
+    protected BTCondition(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
+}
+public class BTCond_InDistance<T> : BTCondition<T> where T : MonoBehaviour {
+    protected new string mName = "Condition: In Distance";
 
     private string mTargetName = "";
     public string TargetName {
@@ -205,16 +240,67 @@ public class BTConditional_InDistance : BehaviorLeaf<GameObject> {
         set { mDistance = value; }
     }
 
+    public BTCond_InDistance(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
+    public BTCond_InDistance(BehaviorTree<T> aBehaviorTree, string aTargetName, float aDistance) : this(aBehaviorTree) {
+        TargetName = aTargetName;
+        Distance = aDistance;
+    }
+
     public override BehaviorState UpdateNode() {
+        if(mTargetName == "" || Distance < 0) {
+            return BehaviorState.Failure;
+        }
+
         GameObject Target = (GameObject)Blackboard.Objects[TargetName];
         if(Target == null) {
             // TODO: Error?
             return BehaviorState.Failure;
         }
-        
+
         if((Target.transform.position - Agent.transform.position).magnitude > Distance) {
             return BehaviorState.Failure;
         }
+        return BehaviorState.Success;
+    }
+}
+
+public abstract class BTTask<T> : BTLeaf<T> {
+    protected BTTask(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
+}
+public class BTTask_MoveTowards<T> : BTTask<T> where T : MonoBehaviour {
+    protected new string mName = "Task: Move Towards";
+
+    private string mTargetName = "";
+    public string TargetName {
+        get { return mTargetName; }
+        set { mTargetName = value; }
+    }
+    private float mSpeed = 0;
+    public float Speed {
+        get { return mSpeed; }
+        set { mSpeed = value; }
+    }
+    
+    public BTTask_MoveTowards(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
+    public BTTask_MoveTowards(BehaviorTree<T> aBehaviorTree, string aTargetName, float aSpeed) : this(aBehaviorTree) {
+        TargetName = aTargetName;
+        Speed = aSpeed;
+    }
+
+    public override BehaviorState UpdateNode() {
+        if (mTargetName == "") {
+            return BehaviorState.Failure;
+        }
+
+        GameObject Target = (GameObject)Blackboard.Objects[TargetName];
+        if (Target == null) {
+            // TODO: Error?
+            return BehaviorState.Failure;
+        }
+
+        Vector3 Offset = Target.transform.position - Agent.transform.position;
+        Agent.transform.position += Offset.normalized * Mathf.Min(Offset.magnitude, Speed);
+
         return BehaviorState.Success;
     }
 }
