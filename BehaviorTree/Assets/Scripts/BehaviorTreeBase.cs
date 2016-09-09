@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public struct BehaviorState {
-    public static readonly byte Success = 0;
-    public static readonly byte Failure = 1;
-    public static readonly byte Running = 2;
-    public static readonly byte Error = 3;
-
+    public const byte Success = 0;
+    public const byte Failure = 1;
+    public const byte Running = 2;
+    public const byte Error = 3;
+    public static readonly string[] StateText = { "Success", "Failure", "Running", "Error" };
+    
     public byte Value;
 
     public static BehaviorState operator !(BehaviorState aOther) {
@@ -26,6 +28,12 @@ public struct BehaviorState {
         return base.GetHashCode();
     }
 
+    public static bool operator ==(BehaviorState aThis, BehaviorState aOther) {
+        return aThis.Value == aOther.Value;
+    }
+    public static bool operator !=(BehaviorState aThis, BehaviorState aOther) {
+        return aThis.Value != aOther.Value;
+    }
     public static bool operator ==(BehaviorState aThis, byte aOther) {
         return aThis.Value == aOther;
     }
@@ -79,7 +87,7 @@ public class BehaviorTree<T> {
         if(!IsRunning && RootNode != null) {
 
             IsRunning = true;
-            RootNode.UpdateNode();
+            RootNode.RunNode();
             IsRunning = false;
         }
     }
@@ -99,9 +107,33 @@ public abstract class BTNode {
     public override string ToString() {
         return NodeText;
     }
-    public abstract BehaviorState UpdateNode();
-    
+
+    public BehaviorState RunNode() {
+        BehaviorState NewState = UpdateNode();
+
 #if UNITY_EDITOR
+        LastBehaviorState = NewState;
+#endif
+
+        return NewState;
+    }
+    protected abstract BehaviorState UpdateNode();
+
+#if UNITY_EDITOR
+    private BehaviorState mLastBehaviorState = BehaviorState.Error;
+    public BehaviorState LastBehaviorState {
+        get { return mLastBehaviorState; }
+        private set {
+            LastBehaviorUpdateTime = Time.realtimeSinceStartup;
+            mLastBehaviorState = value;
+        }
+    }
+    private float mLastBehaviorUpdateTime = 0f;
+    public float LastBehaviorUpdateTime {
+        get { return mLastBehaviorUpdateTime; }
+        private set { mLastBehaviorUpdateTime = value; }
+    }
+
     private Vector2 mNodeSize = new Vector2(160, 40);
     public Vector2 NodeSize {
         get { return mNodeSize; }
@@ -111,9 +143,29 @@ public abstract class BTNode {
         get { return mChildNodeOffset; }
     }
     protected virtual Color BoxColor {
-        get { return Color.blue; }
+        get {
+            Color ReturnColor;
+            switch(LastBehaviorState.Value) {
+                case BehaviorState.Success:
+                    ReturnColor = Color.green;
+                    break;
+                case BehaviorState.Failure:
+                    ReturnColor = Color.red;
+                    break;
+                case BehaviorState.Running:
+                    ReturnColor = Color.yellow;
+                    break;
+                default: 
+                    ReturnColor = Color.magenta;
+                    break;
+            }
+            ReturnColor = Color.Lerp(ReturnColor, Color.gray, 1 - Mathf.Pow(0.15f, Time.realtimeSinceStartup - LastBehaviorUpdateTime));
+
+            ReturnColor.a = 0.15f;
+            return ReturnColor;
+        }
     }
-    protected virtual Texture BoxTexture {
+    protected virtual Texture2D BoxTexture {
         get {
             Texture2D ReturnTexture = new Texture2D(1, 1);
 
@@ -132,8 +184,12 @@ public abstract class BTNode {
         return NodeSize;
     }
     public virtual void RenderNode(Vector2 aFrom) {
-
-        GUI.Box(new Rect(aFrom, NodeSize), NodeText);
+        GUIStyle BoxStyle = new GUIStyle();
+        BoxStyle.normal.background = BoxTexture;
+        BoxStyle.padding = new RectOffset(8, 8, 8, 8);
+        BoxStyle.overflow = new RectOffset(-1, -1, -1, -1);
+        GUI.Box(new Rect(aFrom, NodeSize), NodeText, BoxStyle);
+        
     }
 #endif
 }
@@ -184,9 +240,11 @@ public abstract class BTComposite : BTNode {
         return new Vector2(Mathf.Max(NodeSize.x, TotalRenderSize.x), Mathf.Max(NodeSize.y, TotalRenderSize.y));
     }
     public override void RenderNode(Vector2 aFrom) {
-        GUI.Box(new Rect(aFrom - ChildNodeOffset / 2, GetRenderSize() + ChildNodeOffset), GUIContent.none);
-
-        
+        GUIStyle BoxStyle = new GUIStyle();
+        BoxStyle.normal.background = BoxTexture;
+        BoxStyle.padding = new RectOffset(8, 8, 8, 8);
+        BoxStyle.overflow = new RectOffset(-2, -2, -2, -2);
+        GUI.Box(new Rect(aFrom - ChildNodeOffset / 2, GetRenderSize() + ChildNodeOffset), GUIContent.none, BoxStyle);
 
         base.RenderNode(new Vector2(GetRenderSize().x / 2 - NodeSize.x / 2, 0) + aFrom);
         //UnityEditor.EditorGUI.DrawRect(new Rect(aFrom, NodeSize), Color.gray);
@@ -210,9 +268,9 @@ public class BTComp_Sequence : BTComposite {
     /// Break execution on Failure, pauses execution on Running, return Success if all children succeed.
     /// </summary>
     /// <returns>Node State</returns>
-    public override BehaviorState UpdateNode() {
+    protected override BehaviorState UpdateNode() {
         while(ChildIndex < ChildNodes.Count) {
-            BehaviorState NodeState = ChildNodes[ChildIndex].UpdateNode();
+            BehaviorState NodeState = ChildNodes[ChildIndex].RunNode();
             if(NodeState == BehaviorState.Failure) {
                 // Reset Iterator
                 ChildIndex = 0;
@@ -250,9 +308,9 @@ public class BTComp_Selector : BTComposite {
     /// Breaks exectution on Success, pauses execution on Running, return Failure if all children fail.
     /// </summary>
     /// <returns>Node State</returns>
-    public override BehaviorState UpdateNode() {
+    protected override BehaviorState UpdateNode() {
         while(ChildIndex < ChildNodes.Count) {
-            BehaviorState NodeState = ChildNodes[ChildIndex].UpdateNode();
+            BehaviorState NodeState = ChildNodes[ChildIndex].RunNode();
 
             if(NodeState == BehaviorState.Success) {
                 // Reset Iterator
@@ -277,6 +335,8 @@ public class BTComp_Selector : BTComposite {
         }
 
         // Reset Iterator
+        ChildIndex = 0;
+
         return BehaviorState.Failure;
     }
 }
@@ -311,13 +371,87 @@ public class BTDeco_Inverter : BTDecorator {
 
     public BTDeco_Inverter(BTNode aDecoratedNode) : base(aDecoratedNode) { }
 
-    public override BehaviorState UpdateNode() {
+    protected override BehaviorState UpdateNode() {
         if(Node == null) {
             return BehaviorState.Error;
         }
 
-        BehaviorState ChildState = Node.UpdateNode();
+        BehaviorState ChildState = Node.RunNode();
         return !ChildState;
+    }
+}
+public class BTDeco_Succeeder : BTDecorator {
+    public override string NodeText {
+        get { return "Decorator: Succeeder"; }
+    }
+
+    public BTDeco_Succeeder(BTNode aDecoratedNode) : base(aDecoratedNode) { }
+
+    protected override BehaviorState UpdateNode() {
+        if(Node == null) {
+            return BehaviorState.Error;
+        }
+
+        Node.RunNode();
+
+        return BehaviorState.Success;
+    }
+}
+public class BTDeco_Repeater : BTDecorator {
+    public override string NodeText {
+        get { return "Decorator: Repeater\n" + (RepeatOnCheckState? "RepeatState: " : "ReturnState: ") + BehaviorState.StateText[CheckState.Value] + ", " + (RepeatTimes < 0 ? "indefinately" : RepeatTimes.ToString()); }
+    }
+
+    private BehaviorState mCheckState = BehaviorState.Failure;
+    public BehaviorState CheckState {
+        get { return mCheckState; }
+        set { mCheckState = value; }
+    }
+    private int mRepeatTimes = 1;
+    public int RepeatTimes {
+        get { return mRepeatTimes; }
+        set { mRepeatTimes = value; }
+    }
+    private bool mRepeatOnCheckState = true;
+    public bool RepeatOnCheckState {
+        get { return mRepeatOnCheckState; }
+        set { mRepeatOnCheckState = value; }
+    }
+
+    public BTDeco_Repeater(BTNode aDecoratedNode) : base(aDecoratedNode) { }
+    /// <summary>
+    /// Create a repeater decorator node. The child node will always run at least once.
+    /// </summary>
+    /// <param name="aDecoratedNode">The node to be repeated.</param>
+    /// <param name="aCheckState">The state to check the decorated node against.</param>
+    /// <param name="aRepeatTimes">Number of times to repeat. If less than 0, will repeat until state change.</param>
+    /// <param name="aRepeatOnCheckState">Whether the repeater shall repeat, when the decorated node is in the 'aCheckState', or, when it's not.</param>
+    public BTDeco_Repeater(BTNode aDecoratedNode, BehaviorState aCheckState, int aRepeatTimes = 1, bool aRepeatOnCheckState = true) : this(aDecoratedNode) {
+        CheckState = aCheckState;
+        RepeatTimes = aRepeatTimes;
+        RepeatOnCheckState = aRepeatOnCheckState;
+    }
+
+    protected override BehaviorState UpdateNode() {
+        if(Node == null) {
+            return BehaviorState.Error;
+        }
+
+        BehaviorState ChildState;
+        int RepeatCounter = 0;
+
+        do {
+            ChildState = Node.RunNode();
+            RepeatCounter++;
+        } while (
+            (RepeatTimes < 0 || RepeatCounter < RepeatTimes) && 
+            (
+                (RepeatOnCheckState && ChildState == CheckState) || 
+                (!RepeatOnCheckState && ChildState != CheckState)
+            )
+        );
+        
+        return ChildState;
     }
 }
 
@@ -362,7 +496,7 @@ public class BTCond_InDistance<T> : BTCondition<T> where T : MonoBehaviour {
         Distance = aDistance;
     }
 
-    public override BehaviorState UpdateNode() {
+    protected override BehaviorState UpdateNode() {
         if(mTargetName == "" || Distance < 0) {
             return BehaviorState.Failure;
         }
@@ -406,7 +540,7 @@ public class BTTask_MoveTowards<T> : BTTask<T> where T : MonoBehaviour {
         Speed = aSpeed;
     }
 
-    public override BehaviorState UpdateNode() {
+    protected override BehaviorState UpdateNode() {
         if (mTargetName == "") {
             return BehaviorState.Failure;
         }
@@ -423,4 +557,42 @@ public class BTTask_MoveTowards<T> : BTTask<T> where T : MonoBehaviour {
         return BehaviorState.Success;
     }
 }
+public class BTTask_MoveTo<T> : BTTask<T> where T : MonoBehaviour {
+    public override string NodeText {
+        get { return "MoveTo"; }
+    }
 
+    private string mTargetName = "";
+    public string TargetName {
+        get { return mTargetName; }
+        set { mTargetName = value; }
+    }
+    private float mSpeed = 0;
+    public float Speed {
+        get { return mSpeed; }
+        set { mSpeed = value; }
+    }
+
+    public BTTask_MoveTo(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
+    public BTTask_MoveTo(BehaviorTree<T> aBehaviorTree, string aTargetName, float aSpeed) : this(aBehaviorTree) {
+        TargetName = aTargetName;
+        Speed = aSpeed;
+    }
+
+    protected override BehaviorState UpdateNode() {
+        if (mTargetName == "" || Speed <= 0f) {
+            return BehaviorState.Failure;
+        }
+
+        GameObject Target = (GameObject)Blackboard.Objects[TargetName];
+        if (Target == null) {
+            // TODO: Error?
+            return BehaviorState.Failure;
+        }
+
+        Vector3 Offset = Target.transform.position - Agent.transform.position;
+        Agent.transform.position += Offset.normalized * Mathf.Min(Offset.magnitude, Speed);
+
+        return (Target.transform.position - Agent.transform.position).magnitude <= 0.01f ? BehaviorState.Success : BehaviorState.Running;
+    }
+}
