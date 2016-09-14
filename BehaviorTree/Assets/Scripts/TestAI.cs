@@ -32,7 +32,7 @@ public class TestAI : MonoBehaviour {
 
         BTComp_Sequence TargetSequence = new BTComp_Sequence();
         TargetSequence.AddNode(new BTDeco_Inverter(new BTCond_InDistance<TestAI>(BehaviorTree, "Target", 1)));
-        TargetSequence.AddNode(new BTTask_MoveTo<TestAI>(BehaviorTree, "Target", 0.02f));
+        TargetSequence.AddNode(new BTTask_MoveTowards<TestAI>(BehaviorTree, "Target", 0.02f));
 
         RootSelector.AddNode(FleeSequence);
         RootSelector.AddNode(TargetSequence);

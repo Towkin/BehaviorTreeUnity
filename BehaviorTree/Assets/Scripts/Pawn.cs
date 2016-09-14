@@ -253,6 +253,11 @@ public class Pawn : MonoBehaviour {
 
     [Header("Movement Settings")]
     [SerializeField]
+    private LayerMask mGroundMask = 1; // Initializes to 'Default' Layer
+    [SerializeField]
+    private LayerMask mWaterMask = 16; // Initializes to 'Water' Layer
+
+    [SerializeField]
     private float mWalkAcceleration = 15f;
     [SerializeField]
     private float mSprintAcceleration = 25f;
@@ -300,8 +305,12 @@ public class Pawn : MonoBehaviour {
     private Vector3 mAirGravity = Physics.gravity;
     [SerializeField]
     private Vector3 mWaterGravity = Physics.gravity;
-
-
+    public LayerMask GroundMask {
+        get { return mGroundMask; }
+    }
+    public LayerMask WaterMask {
+        get { return mWaterMask; }
+    }
     public float MoveAcceleration {
         get {
             return
@@ -398,10 +407,8 @@ public class Pawn : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        
         UpdatePawnRotation(Time.deltaTime);
     }
-
     void FixedUpdate() {
         UpdatePawnVelocity(Time.fixedDeltaTime);
         UpdatePawnPosition(Time.fixedDeltaTime);
@@ -412,7 +419,7 @@ public class Pawn : MonoBehaviour {
         if (PawnController && (BodyUseControllerPitch || BodyUseControllerRoll || BodyUseControllerYaw)) {
             
             Vector3 BaseEuler = transform.rotation.eulerAngles;
-            Vector3 ControlEuler = PawnController.ControlEuler;
+            Vector3 ControlEuler = PawnController.ControlRotationEuler;
 
             Quaternion BodyRotation = new Quaternion();
             BodyRotation.eulerAngles = new Vector3(
@@ -432,8 +439,7 @@ public class Pawn : MonoBehaviour {
         if (PawnController) {
             Vector2 MoveInput = PawnController.ConsumeMoveInput();
             Vector2 ForwardAccelerationAdd = MoveInput * MoveAcceleration * aDeltaTime;
-
-            // TODO: Fix this major forward velocity bug.
+            
             Vector3 AA = transform.position + transform.rotation * FromPlanar(new Vector2(-1, -1));
             Vector3 AB = transform.position + transform.rotation * FromPlanar(new Vector2(-1, 1));
             Vector3 BA = transform.position + transform.rotation * FromPlanar(new Vector2(1, -1));
@@ -449,7 +455,7 @@ public class Pawn : MonoBehaviour {
                 PlanarForwardVelocity += ForwardAccelerationAdd;
             }
 
-            if (MoveCondition == PawnMoveCondition.Ground) {
+            if (IsGrounded) {
                 Velocity += PlanarNormal * (PawnController.InputJump ? JumpAcceleration : 0) * aDeltaTime;
             }
         }
@@ -457,14 +463,15 @@ public class Pawn : MonoBehaviour {
     }
     protected virtual void UpdatePawnPosition(float aDeltaTime) {
         
-        CollisionFlags MoveCollisions = MovementController.Move(Velocity * aDeltaTime);
+        MovementController.Move(Velocity * aDeltaTime);
         Velocity = MovementController.velocity;
 
-        
-        PawnController.OnPawnMoved();
+        if(PawnController) {
+            PawnController.OnPawnMoved();
+        }
     }
     protected virtual void UpdatePawnCondition() {
-
+        // Default to Air and PlanarNormal as up.
         PlanarNormal = Vector3.up;
         MoveCondition = PawnMoveCondition.Air;
 
@@ -473,19 +480,20 @@ public class Pawn : MonoBehaviour {
         Vector3 TopCenter = transform.position + MovementController.center + new Vector3(0, MovementController.height / 2 - Radius, 0);
         float RayOffset = 0.15f;
 
-        // TODO: Understand why Water check isn't working properly.
-        if (Physics.CheckCapsule(TopCenter, BottomCenter, Radius - 0.1f, LayerMask.NameToLayer("Water"), QueryTriggerInteraction.Collide)) {
-            if (PawnController) {
-                PlanarNormal = PawnController.ControlRotation * Vector3.up;
+        float WaterSkinDepth = 0.3f;
+
+        if(Physics.CheckCapsule(TopCenter, BottomCenter, Radius - WaterSkinDepth, WaterMask, QueryTriggerInteraction.Collide)) { 
+            if(PawnController) {
+                PlanarNormal = PawnController.ControlRotationQuat * Vector3.up;
             }
 
             MoveCondition = PawnMoveCondition.Water;
         } else {
-            RaycastHit[] GroundCheckHits = Physics.SphereCastAll(BottomCenter, Radius, Vector3.down, RayOffset);
+            RaycastHit[] GroundCheckHits = Physics.SphereCastAll(BottomCenter, Radius, Vector3.down, RayOffset, GroundMask, QueryTriggerInteraction.Ignore);
             Debug.DrawLine(BottomCenter, BottomCenter + Vector3.down * (RayOffset + Radius), Color.red, 2f);
 
-            foreach (RaycastHit GroundCheck in GroundCheckHits) {
-                if (GroundCheck.collider.gameObject != gameObject) {
+            foreach(RaycastHit GroundCheck in GroundCheckHits) {
+                if(GroundCheck.collider.gameObject != gameObject) {
                     PlanarNormal = GroundCheck.normal;
                     MoveCondition = PawnMoveCondition.Ground;
                     break;
@@ -493,5 +501,4 @@ public class Pawn : MonoBehaviour {
             }
         }
     }
-
 }

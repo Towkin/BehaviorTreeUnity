@@ -8,18 +8,30 @@ public class Controller<T> : MonoBehaviour where T : Pawn {
     /// <summary>
     /// The "aiming" of the Controller, as a global rotation.
     /// </summary>
-    public Quaternion ControlRotation {
+    public Quaternion ControlRotationQuat {
         get { return mControlRotation; }
         protected set { mControlRotation = value; }
     }
     /// <summary>
     /// The ControlRotation as modifiable euler angles.
     /// </summary>
-    public Vector3 ControlEuler {
+    public Vector3 ControlRotationEuler {
         get { return mControlRotation.eulerAngles; }
         protected set { mControlRotation.eulerAngles = value; }
     }
-    
+    public float ControlRotationPitch {
+        get { return mControlRotation.eulerAngles.x; }
+        protected set { mControlRotation.eulerAngles = new Vector3(value, ControlRotationYaw, ControlRotationRoll); }
+    }
+    public float ControlRotationYaw {
+        get { return mControlRotation.eulerAngles.y; }
+        protected set { mControlRotation.eulerAngles = new Vector3(ControlRotationPitch, value, ControlRotationRoll); }
+    }
+    public float ControlRotationRoll {
+        get { return mControlRotation.eulerAngles.z; }
+        protected set { mControlRotation.eulerAngles = new Vector3(ControlRotationPitch, ControlRotationYaw, value); }
+    }
+
     private Vector2 mRawMoveInput = Vector2.zero;
     /// <summary>
     /// The actual taken input sum.
@@ -34,7 +46,6 @@ public class Controller<T> : MonoBehaviour where T : Pawn {
     public Vector2 MoveInput {
         get { return RawMoveInput / Mathf.Max(1f, RawMoveInput.magnitude); }
     }
-
     private bool mInputJump = false;
     /// <summary>
     /// Current jump input state.
@@ -43,7 +54,6 @@ public class Controller<T> : MonoBehaviour where T : Pawn {
         get { return mInputJump; }
         set { mInputJump = value; }
     }
-
 
     [SerializeField]
     private T mControlledPawn;

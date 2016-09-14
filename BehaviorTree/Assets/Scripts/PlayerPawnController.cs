@@ -11,6 +11,9 @@ public class PlayerPawnController : Controller<Pawn> {
         float ViewInputYaw = Input.GetAxis("Mouse X");
         float ViewInputPitch = Input.GetAxis("Mouse Y");
 
-        ControlEuler = new Vector3(ControlEuler.x + ViewInputPitch, ControlEuler.y + ViewInputYaw, ControlEuler.z);
+        ControlRotationYaw += ViewInputYaw;
+        ControlRotationPitch = Mathf.Clamp(ControlRotationPitch + ViewInputPitch, -89, 89);
+        
+        //ControlRotationEuler = new Vector3(ControlRotationEuler.x + ViewInputPitch, ControlRotationEuler.y + ViewInputYaw, ControlRotationEuler.z);
     }
 }

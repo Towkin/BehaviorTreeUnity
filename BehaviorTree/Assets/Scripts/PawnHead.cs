@@ -11,6 +11,6 @@ public class PawnHead : MonoBehaviour {
     
 	// Update is called once per frame
 	void Update () {
-        transform.rotation = Body.PawnController.ControlRotation;
+        transform.rotation = Body.PawnController.ControlRotationQuat;
 	}
 }
