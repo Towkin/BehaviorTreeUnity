@@ -10,6 +10,13 @@ public struct BehaviorState {
     
     public byte Value;
 
+    public BehaviorState(byte aValue) {
+        Value = aValue;
+    }
+    public BehaviorState(BehaviorState aOther) {
+        Value = aOther.Value;
+    }
+    
     public static BehaviorState operator !(BehaviorState aOther) {
         if(aOther.Value == Success) {
             return new BehaviorState(Failure);
@@ -19,14 +26,12 @@ public struct BehaviorState {
 
         return new BehaviorState(aOther);
     }
-
     public override bool Equals(object obj) {
         return base.Equals(obj);
     }
     public override int GetHashCode() {
         return base.GetHashCode();
     }
-
     public static bool operator ==(BehaviorState aThis, BehaviorState aOther) {
         return aThis.Value == aOther.Value;
     }
@@ -39,15 +44,14 @@ public struct BehaviorState {
     public static bool operator !=(BehaviorState aThis, byte aOther) {
         return aThis.Value != aOther;
     }
+    public static bool operator ==(byte aOther, BehaviorState aThis) {
+        return aThis.Value == aOther;
+    }
+    public static bool operator !=(byte aOther, BehaviorState aThis) {
+        return aThis.Value != aOther;
+    }
     public static implicit operator BehaviorState(byte aOther) {
         return new BehaviorState(aOther);
-    }
-
-    public BehaviorState(byte aValue) {
-        Value = aValue;
-    }
-    public BehaviorState(BehaviorState aOther) {
-        Value = aOther.Value;
     }
 }
 
