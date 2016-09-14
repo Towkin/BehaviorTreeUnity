@@ -44,11 +44,6 @@ public class Controller<T> : MonoBehaviour where T : Pawn {
         set { mInputJump = value; }
     }
 
-    private bool mIsGrounded = false;
-    public bool IsGrounded {
-        get { return mIsGrounded; }
-        protected set { mIsGrounded = value; }
-    }
 
     [SerializeField]
     private T mControlledPawn;
