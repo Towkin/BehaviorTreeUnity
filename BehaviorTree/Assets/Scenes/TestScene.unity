@@ -530,6 +530,8 @@ MonoBehaviour:
   mBodyUseControllerPitch: 0
   mBodyUseControllerYaw: 1
   mBodyUseControllerRoll: 0
+  mSpeed: 0
+  mDirection: {x: 0, y: 0, z: 1}
   mPlanarNormal: {x: 0, y: 1, z: 0}
   mGroundMask:
     serializedVersion: 2
@@ -537,27 +539,28 @@ MonoBehaviour:
   mWaterMask:
     serializedVersion: 2
     m_Bits: 16
-  mWalkAcceleration: 15
-  mSprintAcceleration: 25
-  mCrouchAcceleration: 10
-  mSwimAcceleration: 15
+  mWalkAcceleration: 80
+  mSprintAcceleration: 70
+  mCrouchAcceleration: 50
+  mSwimAcceleration: 35
   mGroundAccelerationFactor: 1
   mAirAccelerationFactor: 0.05
   mWaterAccelerationFactor: 0.4
   mJumpAcceleration: 50
-  mGroundFriction: 10
+  mJumpTimeMax: 0.13
+  mGroundFriction: 35
   mGroundDrag: 0.5
   mAirFriction: 0.01
   mAirDrag: 0.01
-  mWaterFriction: 1
-  mWaterDrag: 0.8
+  mWaterFriction: 0.1
+  mWaterDrag: 0.9
   mMaxWalkSpeed: 4
   mMaxSprintSpeed: 12
   mMaxCrouchSpeed: 2
   mMaxSwimSpeed: 4
-  mGroundGravity: {x: 0, y: -0.98100007, z: 0}
+  mGroundGravity: {x: 0, y: -1, z: 0}
   mAirGravity: {x: 0, y: -9.81, z: 0}
-  mWaterGravity: {x: 0, y: -2, z: 0}
+  mWaterGravity: {x: 0, y: -0.25, z: 0}
 --- !u!33 &997644444
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -593,7 +596,7 @@ CharacterController:
   m_Radius: 0.5
   m_SlopeLimit: 45
   m_StepOffset: 0.3
-  m_SkinWidth: 0.05
+  m_SkinWidth: 0.015
   m_MinMoveDistance: 0
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &997644447
@@ -607,7 +610,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e81877827bf5654a92bdcdc4a1b8a0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mControlledPawn: {fileID: 997644441}
 --- !u!1 &1162618152
 GameObject:
   m_ObjectHideFlags: 0
@@ -1020,8 +1022,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2023286164}
   m_LocalRotation: {x: 0.28189346, y: 0.33402872, z: -0.10541656, w: 0.8932235}
-  m_LocalPosition: {x: -4.58, y: 1.36, z: 2.66}
-  m_LocalScale: {x: 7.6414127, y: 1, z: 9.924785}
+  m_LocalPosition: {x: -8.97, y: 6.05, z: -2.39}
+  m_LocalScale: {x: 7.6414127, y: 1, z: 26.308006}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 0}

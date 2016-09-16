@@ -8,9 +8,16 @@ public class PawnHead : MonoBehaviour {
     public Pawn Body {
         get { return mBody; }
     }
+
+    private Vector3 mOffset;
+
+    void Start () {
+        mOffset = transform.localPosition;
+    }
     
 	// Update is called once per frame
 	void Update () {
-        transform.rotation = Body.PawnController.ControlRotationQuat;
+        transform.rotation = Body.ControlRotation;
+        transform.localPosition = mOffset + Vector3.up * Mathf.Sin(Time.time * 8) * 0.01f * Body.ForwardVelocity.magnitude;
 	}
 }

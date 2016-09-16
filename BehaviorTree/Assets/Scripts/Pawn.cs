@@ -48,7 +48,7 @@ public struct PawnMoveState {
     public const byte Walking = 0;
     public const byte Sprinting = 1;
     public const byte Crouching = 2;
-    public const byte Swimming = 2;
+    public const byte Swimming = 3;
 
     public byte Value;
 
@@ -98,9 +98,19 @@ public class Pawn : MonoBehaviour {
         get { return mMovementController; }
         private set { mMovementController = value; }
     }
+    private Controller<Pawn> mPawnController = null;
     public virtual Controller<Pawn> PawnController {
-        get { return GetComponent<Controller<Pawn>>(); }
+        get { return mPawnController; }
+        set { mPawnController = value; }
     }
+
+    private Quaternion mControlRotation;
+    public Quaternion ControlRotation {
+        get { return mControlRotation; }
+        protected set { mControlRotation = value; }
+    }
+
+
     [Header("Controller Settings")]
     [SerializeField]
     private bool mBodyUseControllerPitch = false;
@@ -129,9 +139,10 @@ public class Pawn : MonoBehaviour {
     #endregion
     #region Movement - Base
 
+    [SerializeField]
     private float mSpeed = 0f;
+    [SerializeField]
     private Vector3 mDirection = Vector3.forward;
-    private Vector2 mPlanarDirection = Vector2.up;
     [SerializeField]
     private Vector3 mPlanarNormal = Vector3.up;
     /// <summary>
@@ -165,17 +176,17 @@ public class Pawn : MonoBehaviour {
 
                 // If the set Direction is parallell to the PlanarNormal, do not update the PlanarDirection.
                 // 0.999f is a number close enough to 1, where the new Direction is essentially parallell to PlanarNormal.
-                if(Mathf.Abs(Vector3.Dot(Direction, PlanarNormal)) <= 0.999f) {
-                    mPlanarDirection = ToPlanar(Direction).normalized;
-                }
+                //if(Mathf.Abs(Vector3.Dot(Direction, PlanarNormal)) <= 0.999f) {
+                //    mPlanarDirection = ToPlanar(Direction).normalized;
+                //}
             }
         }
     }
     /// <summary>
     /// The 2d Direction on plane defined by the PlanarNormal. Automatically updated on Direction change.
     /// </summary>
-    public Vector2 PlanarDirection {
-        get { return mPlanarDirection; }
+    public Vector3 PlanarDirection {
+        get { return ToPlanar(Direction); }
     }
     /// <summary>
     /// The up-normal of the Pawn. Should mostly be 'Vector3.up'. All 'Planar'-variables use this normal to determine their plane.
@@ -195,21 +206,28 @@ public class Pawn : MonoBehaviour {
     /// </summary>
     /// <param name="aVector">The vector to project and rotate.</param>
     /// <returns>The vector given on the 2d-plane.</returns>
-    public Vector2 ToPlanar(Vector3 aVector) {
-        // Project the Direction onto the plane defined by PlanarNormal. Rotate that projection to the plane's coordinate system.
-        Vector3 ProjectedRotated = Quaternion.FromToRotation(Quaternion.Inverse(transform.rotation) * PlanarNormal, Vector3.up) * Vector3.ProjectOnPlane(aVector, PlanarNormal);
+    public Vector3 ToPlanar(Vector3 aVector) {
+        //// Project the Direction onto the plane defined by PlanarNormal. Rotate that projection to the plane's coordinate system.
+        //Vector3 ProjectedRotated = Quaternion.FromToRotation(Quaternion.Inverse(transform.rotation) * PlanarNormal, Vector3.up) * Vector3.ProjectOnPlane(aVector, PlanarNormal);
 
-        // Note, Vector3.forward is represented as Vector2.up here.
-        return new Vector2(ProjectedRotated.x, ProjectedRotated.z);
+        //// Note, Vector3.forward is represented as Vector2.up here.
+        //return new Vector2(ProjectedRotated.x, ProjectedRotated.z);
+
+        // New method, testing
+        //return Quaternion.FromToRotation(Quaternion.Inverse(transform.rotation) * PlanarNormal, Vector3.up) * Vector3.ProjectOnPlane(aVector, PlanarNormal);
+        return Quaternion.FromToRotation(Quaternion.Inverse(transform.rotation) * PlanarNormal, Vector3.up) * aVector;
     }
     /// <summary>
     /// Rotates a given 2d-vector from the plane defined by the PlanarNormal to the global coordinate system, returning a 3d-vector.
     /// </summary>
     /// <param name="aVector">The vector to rotate.</param>
     /// <returns>The 3d representation of the 2d-vector on the PlanarNormal.</returns>
-    public Vector3 FromPlanar(Vector2 aVector) {
+    public Vector3 FromPlanar(Vector3 aVector) {
         // Rotate the vector to global coordinate system.
-        return Quaternion.FromToRotation(Vector3.up, Quaternion.Inverse(transform.rotation) * PlanarNormal) * new Vector3(aVector.x, 0, aVector.y);
+        //return Quaternion.FromToRotation(Vector3.up, Quaternion.Inverse(transform.rotation) * PlanarNormal) * new Vector3(aVector.x, 0, aVector.y);
+
+        // New method, testing
+        return Quaternion.FromToRotation(Vector3.up, Quaternion.Inverse(transform.rotation) * PlanarNormal) * aVector;
     }
     /// <summary>
     /// Global velocity in m/s.
@@ -231,17 +249,20 @@ public class Pawn : MonoBehaviour {
     /// <summary>
     /// The velocity along the plane defined by the PlanarNormal.
     /// </summary>
-    public Vector2 PlanarVelocity {
+    public Vector3 PlanarVelocity {
         get { return ToPlanar(Velocity); }
         set {
-            Vector3 InputGlobal = FromPlanar(value);
-            Velocity = InputGlobal + (Velocity - FromPlanar(PlanarVelocity));
+            //Vector3 InputGlobal = FromPlanar(value);
+            //Velocity = InputGlobal + (Velocity - FromPlanar(PlanarVelocity));
+
+            // New method, testing
+            Velocity = FromPlanar(value);
         }
     }
     /// <summary>
     /// The forward velocity along the plane defined by the PlanarNormal.
     /// </summary>
-    public Vector2 PlanarForwardVelocity {
+    public Vector3 PlanarForwardVelocity {
         get { return ToPlanar(ForwardVelocity); }
         set {
             Vector3 InputForward = FromPlanar(value);
@@ -258,46 +279,48 @@ public class Pawn : MonoBehaviour {
     private LayerMask mWaterMask = 16; // Initializes to 'Water' Layer
 
     [SerializeField]
-    private float mWalkAcceleration = 15f;
+    private float mWalkAcceleration = 80f;
     [SerializeField]
-    private float mSprintAcceleration = 25f;
+    private float mSprintAcceleration = 70f;
     [SerializeField]
-    private float mCrouchAcceleration = 10f;
+    private float mCrouchAcceleration = 50f;
     [SerializeField]
-    private float mSwimAcceleration = 15f;
+    private float mSwimAcceleration = 35f;
 
 
     [SerializeField]
     private float mGroundAccelerationFactor = 1f;
     [SerializeField]
-    private float mAirAccelerationFactor = 0.15f;
+    private float mAirAccelerationFactor = 0.10f;
     [SerializeField]
     private float mWaterAccelerationFactor = 0.8f;
 
     [SerializeField]
     private float mJumpAcceleration = 50f;
+    [SerializeField]
+    private float mJumpTimeMax = 0.15f;
 
     [SerializeField]
-    private float mGroundFriction = 10.0f;
+    private float mGroundFriction = 40.0f;
     [SerializeField]
     private float mGroundDrag = 0.5f;
     [SerializeField]
     private float mAirFriction = 0.1f;
     [SerializeField]
-    private float mAirDrag = 0.53f;
+    private float mAirDrag = 0.01f;
     [SerializeField]
-    private float mWaterFriction = 6.0f;
+    private float mWaterFriction = 0.1f;
     [SerializeField]
-    private float mWaterDrag = 0.7f;
+    private float mWaterDrag = 0.9f;
 
     [SerializeField]
     private float mMaxWalkSpeed = 4f;
     [SerializeField]
-    private float mMaxSprintSpeed = 12f;
+    private float mMaxSprintSpeed = 10f;
     [SerializeField]
     private float mMaxCrouchSpeed = 2f;
     [SerializeField]
-    private float mMaxSwimSpeed = 4f;
+    private float mMaxSwimSpeed = 3f;
 
     [SerializeField]
     private Vector3 mGroundGravity = Physics.gravity * 0.1f;
@@ -330,6 +353,9 @@ public class Pawn : MonoBehaviour {
     }
     public float JumpAcceleration {
         get { return mJumpAcceleration; }
+    }
+    public float JumpTimeMax {
+        get { return mJumpTimeMax; }
     }
     public float MoveFriction {
         get {
@@ -377,6 +403,10 @@ public class Pawn : MonoBehaviour {
     private PawnMoveCondition mMoveCondition = new PawnMoveCondition(PawnMoveCondition.Ground);
     private PawnMoveState mMoveState = new PawnMoveState(PawnMoveState.Walking);
 
+    private bool mJumpState = false;
+    private float mLastJumpStart = 0;
+    private Vector3 mJumpVector = Vector3.up;
+
     public PawnMoveCondition MoveCondition {
         get { return mMoveCondition; }
         protected set { mMoveCondition = value; }
@@ -385,6 +415,19 @@ public class Pawn : MonoBehaviour {
         get { return mMoveState; }
         protected set { mMoveState = value; }
     }
+    public bool JumpState {
+        get { return mJumpState; }
+        protected set { mJumpState = value; }
+    }
+    public float LastJumpStart {
+        get { return mLastJumpStart; }
+        protected set { mLastJumpStart = value; }
+    }
+    public Vector3 JumpVector {
+        get { return mJumpVector; }
+        protected set { mJumpVector = value; }
+    }
+
     public bool IsGrounded {
         get { return mMoveCondition == PawnMoveCondition.Ground; }
     }
@@ -394,8 +437,13 @@ public class Pawn : MonoBehaviour {
     public bool IsInWater {
         get { return mMoveCondition == PawnMoveCondition.Water; }
     }
+    public bool IsJumping {
+        get { return mJumpState && (LastJumpStart + JumpTimeMax) > Time.time; }
+    }
+   
     #endregion
-    // Use this for initialization
+    
+
     void Start () {
         MovementController = GetComponent<CharacterController>();
 
@@ -403,10 +451,12 @@ public class Pawn : MonoBehaviour {
         Vector3 DebugVector = new Vector3(5, 1, -2);
 
         Debug.Log(DebugVector.ToString() + " - " + ToPlanar(DebugVector).ToString() + "; " + FromPlanar(ToPlanar(DebugVector)).ToString());
+
+        
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void LateUpdate () {
         UpdatePawnRotation(Time.deltaTime);
     }
     void FixedUpdate() {
@@ -416,58 +466,32 @@ public class Pawn : MonoBehaviour {
     }
 
     protected virtual void UpdatePawnRotation(float aDeltaTime) {
-        if (PawnController && (BodyUseControllerPitch || BodyUseControllerRoll || BodyUseControllerYaw)) {
-            
-            Vector3 BaseEuler = transform.rotation.eulerAngles;
-            Vector3 ControlEuler = PawnController.ControlRotationEuler;
-
-            Quaternion BodyRotation = new Quaternion();
-            BodyRotation.eulerAngles = new Vector3(
-                BodyUseControllerPitch ? ControlEuler.x : BaseEuler.x,
-                BodyUseControllerYaw   ? ControlEuler.y : BaseEuler.y,
-                BodyUseControllerRoll  ? ControlEuler.z : BaseEuler.z
-            );
-
-            transform.rotation = BodyRotation;
-        }
+        
     }
     protected virtual void UpdatePawnVelocity(float aDeltaTime) {
         Velocity += PawnGravity * aDeltaTime;
         Speed -= Mathf.Min(MoveFriction * aDeltaTime, Speed);
         Speed *= Mathf.Pow(1f - MoveDrag, aDeltaTime);
-
-        if (PawnController) {
-            Vector2 MoveInput = PawnController.ConsumeMoveInput();
-            Vector2 ForwardAccelerationAdd = MoveInput * MoveAcceleration * aDeltaTime;
-            
-            Vector3 AA = transform.position + transform.rotation * FromPlanar(new Vector2(-1, -1));
-            Vector3 AB = transform.position + transform.rotation * FromPlanar(new Vector2(-1, 1));
-            Vector3 BA = transform.position + transform.rotation * FromPlanar(new Vector2(1, -1));
-            Vector3 BB = transform.position + transform.rotation * FromPlanar(new Vector2(1, 1));
-
-            Debug.DrawLine(AA, AB, Color.green, 0.25f);
-            Debug.DrawLine(AA, BA, Color.green, 0.25f);
-            Debug.DrawLine(AB, BB, Color.green, 0.25f);
-            Debug.DrawLine(BA, BB, Color.green, 0.25f);
-            Debug.DrawLine(transform.position, transform.position + transform.rotation * FromPlanar(ForwardAccelerationAdd) * 5, Color.blue, 0.25f);
-
-            if (Vector2.Dot(ForwardAccelerationAdd, PlanarForwardVelocity) < MaxControlSpeed) {
-                PlanarForwardVelocity += ForwardAccelerationAdd;
-            }
-
-            if (IsGrounded) {
-                Velocity += PlanarNormal * (PawnController.InputJump ? JumpAcceleration : 0) * aDeltaTime;
-            }
-        }
         
+        if(IsJumping) {
+            Velocity += JumpVector * JumpAcceleration * aDeltaTime;
+        }
     }
     protected virtual void UpdatePawnPosition(float aDeltaTime) {
         
         MovementController.Move(Velocity * aDeltaTime);
         Velocity = MovementController.velocity;
 
-        if(PawnController) {
-            PawnController.OnPawnMoved();
+        Vector3[] Points = new Vector3[8];
+        for(int i = 0; i < 8; i++) {
+            Points[i] = transform.position + transform.rotation * FromPlanar(new Vector3(0.5f - (i / 2) / 2, 0.5f - (i / 2) % 2, 0.5f - i % 2));
+        }
+        
+        for(int i = 0; i < 8; i++) {
+            for(int j = i + 1; j < 8; j++) {
+                Debug.DrawLine(Points[i], Points[j], Color.green, Time.deltaTime);
+            }
+            
         }
     }
     protected virtual void UpdatePawnCondition() {
@@ -478,27 +502,123 @@ public class Pawn : MonoBehaviour {
         float Radius = MovementController.radius + MovementController.skinWidth;
         Vector3 BottomCenter = transform.position + MovementController.center - new Vector3(0, MovementController.height / 2 - Radius, 0);
         Vector3 TopCenter = transform.position + MovementController.center + new Vector3(0, MovementController.height / 2 - Radius, 0);
-        float RayOffset = 0.15f;
+        float RayOffset = 0.25f;
 
         float WaterSkinDepth = 0.3f;
 
+        // Water
         if(Physics.CheckCapsule(TopCenter, BottomCenter, Radius - WaterSkinDepth, WaterMask, QueryTriggerInteraction.Collide)) { 
-            if(PawnController) {
-                PlanarNormal = PawnController.ControlRotationQuat * Vector3.up;
+            PlanarNormal = ControlRotation * Vector3.up;
+            MoveCondition = PawnMoveCondition.Water;
+
+            if(MoveState != PawnMoveState.Swimming) {
+                SwimStart();
             }
 
-            MoveCondition = PawnMoveCondition.Water;
+        // Ground
         } else {
+            if(MoveState == PawnMoveState.Swimming) {
+                SwimEnd();
+            }
             RaycastHit[] GroundCheckHits = Physics.SphereCastAll(BottomCenter, Radius, Vector3.down, RayOffset, GroundMask, QueryTriggerInteraction.Ignore);
-            Debug.DrawLine(BottomCenter, BottomCenter + Vector3.down * (RayOffset + Radius), Color.red, 2f);
-
+            
             foreach(RaycastHit GroundCheck in GroundCheckHits) {
                 if(GroundCheck.collider.gameObject != gameObject) {
                     PlanarNormal = GroundCheck.normal;
                     MoveCondition = PawnMoveCondition.Ground;
+                    Debug.DrawLine(GroundCheck.point, GroundCheck.point + PlanarNormal, Color.red, 2f);
                     break;
                 }
             }
         }
     }
+
+
+    public virtual void CancelMoveState() {
+        switch(MoveState.Value) {
+            case PawnMoveState.Crouching:
+                break;
+        }
+
+        MoveState = PawnMoveState.Walking;
+    }
+
+    #region Event Recievers
+
+    public virtual void MoveInput(Vector3 aInputVector, float aDeltaTime) {
+        Vector3 CleanInput = IsInWater ? aInputVector.normalized : new Vector3(aInputVector.x, 0, aInputVector.z).normalized;
+        Vector3 ForwardAdd = CleanInput * MoveAcceleration * aDeltaTime;
+        Vector3 NewPlanarForwardVelocity = PlanarForwardVelocity + ForwardAdd;
+
+        Debug.DrawLine(transform.position, transform.position + transform.rotation * FromPlanar(NewPlanarForwardVelocity), Color.blue, 0.1f);
+
+        // If the new speed is within current limits
+        if(NewPlanarForwardVelocity.magnitude <= MaxControlSpeed) {
+            PlanarForwardVelocity = NewPlanarForwardVelocity;
+        // Else if the old speed was within current limits, add only up to control speed, new vector direction intact though.
+        } else if(PlanarForwardVelocity.magnitude <= MaxControlSpeed) {
+            PlanarForwardVelocity = NewPlanarForwardVelocity.normalized * MaxControlSpeed;
+        // Else when old speed was over MaxControlSpeed
+        } else {
+            PlanarForwardVelocity += (Vector3.Dot(ForwardAdd, PlanarForwardVelocity) > 0 ? Vector3.zero : Vector3.Project(ForwardAdd, PlanarForwardVelocity)) + Vector3.ProjectOnPlane(ForwardAdd, PlanarForwardVelocity);
+        }
+
+        
+    }
+    public virtual void ViewInput(Quaternion aInputQuat, float aDeltaTime) {
+        ControlRotation = aInputQuat;
+
+        if(BodyUseControllerPitch || BodyUseControllerRoll || BodyUseControllerYaw) {
+            Vector3 BaseEuler = transform.rotation.eulerAngles;
+            Vector3 ControlEuler = aInputQuat.eulerAngles;
+
+            Quaternion BodyRotation = new Quaternion();
+            BodyRotation.eulerAngles = new Vector3(
+                BodyUseControllerPitch ? ControlEuler.x : BaseEuler.x,
+                BodyUseControllerYaw ? ControlEuler.y : BaseEuler.y,
+                BodyUseControllerRoll ? ControlEuler.z : BaseEuler.z
+            );
+
+            transform.rotation = BodyRotation;
+        }
+    }
+
+    public virtual void JumpStart() {
+        if(IsGrounded) {
+            JumpState = true;
+            LastJumpStart = Time.time;
+            JumpVector = PlanarNormal;
+        }
+    }
+    public virtual void JumpEnd() {
+        JumpState = false;
+    }
+    public virtual void CrouchStart() {
+        if(MoveState == PawnMoveState.Walking) {
+            MoveState = PawnMoveState.Crouching;
+        }
+    }
+    public virtual void CrouchEnd() {
+        if(MoveState == PawnMoveState.Crouching) {
+            CancelMoveState();
+        }
+    }
+    public virtual void SprintStart() {
+        if(MoveState == PawnMoveState.Walking) {
+            MoveState = PawnMoveState.Sprinting;
+        }
+    }
+    public virtual void SprintEnd() {
+        if(MoveState == PawnMoveState.Sprinting) {
+            CancelMoveState();
+        }
+    }
+    public virtual void SwimStart() {
+        CancelMoveState();
+        MoveState = PawnMoveState.Swimming;
+    }
+    public virtual void SwimEnd() {
+        CancelMoveState();
+    }
+    #endregion
 }
