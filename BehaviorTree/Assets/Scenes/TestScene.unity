@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.38653424, g: 0.41996723, b: 0.48573524, a: 1}
+  m_IndirectSpecularColor: {r: 0.44692558, g: 0.49678743, b: 0.57508624, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -506,7 +506,7 @@ GameObject:
   m_Component:
   - 4: {fileID: 997644445}
   - 33: {fileID: 997644444}
-  - 114: {fileID: 997644441}
+  - 114: {fileID: 997644442}
   - 143: {fileID: 997644446}
   - 114: {fileID: 997644447}
   m_Layer: 0
@@ -516,7 +516,7 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &997644441
+--- !u!114 &997644442
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -524,7 +524,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 997644440}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d9caf913ee10a994b967b3c2e8b9c7ad, type: 3}
+  m_Script: {fileID: 11500000, guid: 4cbcda8f76fc51c4c831eab0e70358bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   mBodyUseControllerPitch: 0
@@ -544,23 +544,29 @@ MonoBehaviour:
   mCrouchAcceleration: 50
   mSwimAcceleration: 35
   mGroundAccelerationFactor: 1
-  mAirAccelerationFactor: 0.05
-  mWaterAccelerationFactor: 0.4
-  mJumpAcceleration: 50
-  mJumpTimeMax: 0.13
-  mGroundFriction: 35
+  mAirAccelerationFactor: 0.1
+  mWaterAccelerationFactor: 0.8
+  mJumpAcceleration: 60
+  mJumpTimeMax: 0.15
+  mGroundFriction: 40
   mGroundDrag: 0.5
-  mAirFriction: 0.01
+  mAirFriction: 0.1
   mAirDrag: 0.01
   mWaterFriction: 0.1
   mWaterDrag: 0.9
   mMaxWalkSpeed: 4
-  mMaxSprintSpeed: 12
+  mMaxSprintSpeed: 10
   mMaxCrouchSpeed: 2
-  mMaxSwimSpeed: 4
-  mGroundGravity: {x: 0, y: -1, z: 0}
+  mMaxSwimSpeed: 3
+  mGroundGravity: {x: 0, y: -0.98100007, z: 0}
   mAirGravity: {x: 0, y: -9.81, z: 0}
-  mWaterGravity: {x: 0, y: -0.25, z: 0}
+  mWaterGravity: {x: 0, y: -9.81, z: 0}
+  mHealth: 0
+  mHealthMax: 0
+  mAttackDamage: 0
+  mAttackTime: 0
+  mAttackConeAngle: 0
+  mAttackConeRadius: 0
 --- !u!33 &997644444
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1069,4 +1075,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfcf730d90703454e89faa5b0c4bf6e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mBody: {fileID: 997644441}
+  mBody: {fileID: 997644442}

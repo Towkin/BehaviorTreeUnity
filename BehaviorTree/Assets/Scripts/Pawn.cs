@@ -443,19 +443,11 @@ public class Pawn : MonoBehaviour {
    
     #endregion
     
-
     void Start () {
         MovementController = GetComponent<CharacterController>();
 
         PlanarNormal = PlanarNormal;
-        Vector3 DebugVector = new Vector3(5, 1, -2);
-
-        Debug.Log(DebugVector.ToString() + " - " + ToPlanar(DebugVector).ToString() + "; " + FromPlanar(ToPlanar(DebugVector)).ToString());
-
-        
 	}
-	
-	// Update is called once per frame
 	void LateUpdate () {
         UpdatePawnRotation(Time.deltaTime);
     }
@@ -550,7 +542,10 @@ public class Pawn : MonoBehaviour {
         Vector3 ForwardAdd = CleanInput * MoveAcceleration * aDeltaTime;
         Vector3 NewPlanarForwardVelocity = PlanarForwardVelocity + ForwardAdd;
 
-        Debug.DrawLine(transform.position, transform.position + transform.rotation * FromPlanar(NewPlanarForwardVelocity), Color.blue, 0.1f);
+        Vector3 DebugCurrentVelocityPosition = transform.position + transform.rotation * FromPlanar(PlanarForwardVelocity);
+
+        Debug.DrawLine(transform.position, DebugCurrentVelocityPosition, Color.blue, 0.1f);
+        Debug.DrawLine(DebugCurrentVelocityPosition, transform.position + transform.rotation * FromPlanar(NewPlanarForwardVelocity), Color.magenta, 0.1f);
 
         // If the new speed is within current limits
         if(NewPlanarForwardVelocity.magnitude <= MaxControlSpeed) {

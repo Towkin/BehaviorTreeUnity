@@ -17,7 +17,9 @@ public class PawnHead : MonoBehaviour {
     
 	// Update is called once per frame
 	void Update () {
-        transform.rotation = Body.ControlRotation;
-        transform.localPosition = mOffset + Vector3.up * Mathf.Sin(Time.time * 8) * 0.01f * Body.ForwardVelocity.magnitude;
+        if (Body) {
+            transform.rotation = Body.ControlRotation;
+            transform.localPosition = mOffset + Vector3.up * Mathf.Sin(Time.time * 8) * 0.01f * Body.ForwardVelocity.magnitude;
+        }
 	}
 }
