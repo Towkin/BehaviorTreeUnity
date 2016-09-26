@@ -98,8 +98,8 @@ public class Pawn : MonoBehaviour {
         get { return mMovementController; }
         private set { mMovementController = value; }
     }
-    private Controller<Pawn> mPawnController = null;
-    public virtual Controller<Pawn> PawnController {
+    private PawnController<Pawn> mPawnController = null;
+    public virtual PawnController<Pawn> PawnController {
         get { return mPawnController; }
         set { mPawnController = value; }
     }
@@ -323,11 +323,16 @@ public class Pawn : MonoBehaviour {
     private float mMaxSwimSpeed = 3f;
 
     [SerializeField]
+    private float mMass = 100f;
+
+    [SerializeField]
     private Vector3 mGroundGravity = Physics.gravity * 0.1f;
     [SerializeField]
     private Vector3 mAirGravity = Physics.gravity;
     [SerializeField]
     private Vector3 mWaterGravity = Physics.gravity;
+
+
     public LayerMask GroundMask {
         get { return mGroundMask; }
     }
@@ -384,6 +389,10 @@ public class Pawn : MonoBehaviour {
                 MoveState == PawnMoveState.Swimming ? mMaxSwimSpeed :
                 0f;
         }
+    }
+    public float Mass {
+        get { return mMass; }
+        protected set { mMass = Mathf.Max(0f, value); }
     }
     
     /// <summary>
@@ -443,15 +452,15 @@ public class Pawn : MonoBehaviour {
    
     #endregion
     
-    void Start () {
+    public virtual void Start () {
         MovementController = GetComponent<CharacterController>();
 
         PlanarNormal = PlanarNormal;
 	}
-	void LateUpdate () {
+    public virtual void LateUpdate () {
         UpdatePawnRotation(Time.deltaTime);
     }
-    void FixedUpdate() {
+    public virtual void FixedUpdate() {
         UpdatePawnVelocity(Time.fixedDeltaTime);
         UpdatePawnPosition(Time.fixedDeltaTime);
         UpdatePawnCondition();
@@ -499,8 +508,13 @@ public class Pawn : MonoBehaviour {
         float WaterSkinDepth = 0.3f;
 
         // Water
-        if(Physics.CheckCapsule(TopCenter, BottomCenter, Radius - WaterSkinDepth, WaterMask, QueryTriggerInteraction.Collide)) { 
-            PlanarNormal = ControlRotation * Vector3.up;
+        if(Physics.CheckCapsule(TopCenter, BottomCenter, Radius - WaterSkinDepth, WaterMask, QueryTriggerInteraction.Collide)) {
+
+            float SwimYaw = ControlRotation.eulerAngles.y;
+            Quaternion SwimRotation = new Quaternion();
+            SwimRotation.eulerAngles = new Vector3(0, SwimYaw, 0);
+
+            PlanarNormal = SwimRotation * Vector3.up;
             MoveCondition = PawnMoveCondition.Water;
 
             if(MoveState != PawnMoveState.Swimming) {

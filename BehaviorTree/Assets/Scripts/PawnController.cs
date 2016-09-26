@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 
-public class Controller<T> : MonoBehaviour where T : Pawn {
+public class PawnController<T> : MonoBehaviour where T : Pawn {
 
 
     private Quaternion mControlRotation;
@@ -61,8 +61,8 @@ public class Controller<T> : MonoBehaviour where T : Pawn {
     protected delegate void InputVectorEvent(Vector3 aInput, float aDeltaTime);
     protected delegate void InputQuatEvent(Quaternion aInput, float aDeltaTime);
 
-    protected event InputVectorEvent eOnMove;           protected void CallMove(Vector3 aInput, float aDeltaTime) {     if(eOnMove != null) eOnMove(aInput, aDeltaTime); }
-    protected event InputQuatEvent eOnView;             protected void CallView(Quaternion aInput, float aDeltaTime) {  if(eOnView != null) eOnView(aInput, aDeltaTime); }
+    protected event InputVectorEvent eOnMove;           protected void CallMove(Vector3 aInput, float aDeltaTime)       { if(eOnMove != null) eOnMove(aInput, aDeltaTime); }
+    protected event InputQuatEvent eOnView;             protected void CallView(Quaternion aInput, float aDeltaTime)    { if(eOnView != null) eOnView(aInput, aDeltaTime); }
 
     protected event InputButtonEvent eOnJumpStart;      protected void CallJumpStart()      { if(eOnJumpStart != null)      eOnJumpStart(); }
     protected event InputButtonEvent eOnJumpEnd;        protected void CallJumpEnd()        { if(eOnJumpEnd != null)        eOnJumpEnd(); }
@@ -71,44 +71,69 @@ public class Controller<T> : MonoBehaviour where T : Pawn {
     protected event InputButtonEvent eOnCrouchStart;    protected void CallCrouchStart()    { if(eOnCrouchStart != null)    eOnCrouchStart(); }
     protected event InputButtonEvent eOnCrouchEnd;      protected void CallCrouchEnd()      { if(eOnCrouchEnd != null)      eOnCrouchEnd(); }
 
+    [SerializeField]
+    private List<T> mInitialControlledPawns = new List<T>();
     private List<T> mControlledPawns = new List<T>();
+    /// <summary>
+    /// A read only collection of the controlled pawns. Use AddPawn and RemovePawn to modify the list.
+    /// </summary>
     public ReadOnlyCollection<T> ControlledPawns {
         get { return mControlledPawns.AsReadOnly(); }
     }
+
+    /// <summary>
+    /// Adds a pawn to the list of controlled pawns. Adds event connections to the pawn's functions.
+    /// </summary>
+    /// <param name="New Pawn"></param>
     public void AddPawn(T aNewPawn) {
         if(!mControlledPawns.Contains(aNewPawn)) {
             mControlledPawns.Add(aNewPawn);
 
             // Events
-            eOnMove += aNewPawn.MoveInput;
-            eOnView += aNewPawn.ViewInput;
-
-            eOnJumpStart += aNewPawn.JumpStart;
-            eOnJumpEnd += aNewPawn.JumpEnd;
-            eOnSprintStart += aNewPawn.SprintStart;
-            eOnSprintEnd += aNewPawn.SprintEnd;
-            eOnCrouchStart += aNewPawn.CrouchStart;
-            eOnCrouchEnd += aNewPawn.CrouchEnd;
+            AddEvents(aNewPawn);
         }
     }
+    
+    /// <summary>
+    /// Removes a pawn from the list of controlled pawns, if the list contains it. Removes the event connections.
+    /// </summary>
+    /// <param name="aRemovePawn"></param>
     public void RemovePawn(T aRemovePawn) {
         if(mControlledPawns.Contains(aRemovePawn)) {
             mControlledPawns.Remove(aRemovePawn);
 
             // Events
-            eOnMove -= aRemovePawn.MoveInput;
-            eOnView -= aRemovePawn.ViewInput;
-
-            eOnJumpStart -= aRemovePawn.JumpStart;
-            eOnJumpEnd -= aRemovePawn.JumpEnd;
-            eOnSprintStart -= aRemovePawn.SprintStart;
-            eOnSprintEnd -= aRemovePawn.SprintEnd;
-            eOnCrouchStart -= aRemovePawn.CrouchStart;
-            eOnCrouchEnd -= aRemovePawn.CrouchEnd;
+            RemoveEvents(aRemovePawn);
         }
     }
-    
+    protected virtual void AddEvents(T aPawn) {
+        eOnMove += aPawn.MoveInput;
+        eOnView += aPawn.ViewInput;
+
+        eOnJumpStart += aPawn.JumpStart;
+        eOnJumpEnd += aPawn.JumpEnd;
+        eOnSprintStart += aPawn.SprintStart;
+        eOnSprintEnd += aPawn.SprintEnd;
+        eOnCrouchStart += aPawn.CrouchStart;
+        eOnCrouchEnd += aPawn.CrouchEnd;
+    }
+    protected virtual void RemoveEvents(T aPawn) {
+        eOnMove -= aPawn.MoveInput;
+        eOnView -= aPawn.ViewInput;
+
+        eOnJumpStart -= aPawn.JumpStart;
+        eOnJumpEnd -= aPawn.JumpEnd;
+        eOnSprintStart -= aPawn.SprintStart;
+        eOnSprintEnd -= aPawn.SprintEnd;
+        eOnCrouchStart -= aPawn.CrouchStart;
+        eOnCrouchEnd -= aPawn.CrouchEnd;
+    }
+
     void OnEnable() {
+        foreach(T InitialPawn in mInitialControlledPawns) {
+            AddPawn(InitialPawn);
+        }
+
         // Ugly but simple way to automatically add the Pawn Component of the current game object, if no other is specified.
         if(ControlledPawns.Count == 0 && GetComponent<T>()) {
             AddPawn(GetComponent<T>());

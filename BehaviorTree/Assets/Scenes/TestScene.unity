@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44692558, g: 0.49678743, b: 0.57508624, a: 1}
+  m_IndirectSpecularColor: {r: 0.38653424, g: 0.41996723, b: 0.48573524, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -508,7 +508,7 @@ GameObject:
   - 33: {fileID: 997644444}
   - 114: {fileID: 997644442}
   - 143: {fileID: 997644446}
-  - 114: {fileID: 997644447}
+  - 114: {fileID: 997644441}
   m_Layer: 0
   m_Name: PawnBody
   m_TagString: Player
@@ -516,6 +516,19 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &997644441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 997644440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9d88a77c363ae44fb782948af2af069, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mInitialControlledPawns:
+  - {fileID: 997644442}
 --- !u!114 &997644442
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -549,24 +562,26 @@ MonoBehaviour:
   mJumpAcceleration: 60
   mJumpTimeMax: 0.15
   mGroundFriction: 40
-  mGroundDrag: 0.5
+  mGroundDrag: 0.8
   mAirFriction: 0.1
   mAirDrag: 0.01
   mWaterFriction: 0.1
-  mWaterDrag: 0.9
+  mWaterDrag: 0.99
   mMaxWalkSpeed: 4
   mMaxSprintSpeed: 10
   mMaxCrouchSpeed: 2
-  mMaxSwimSpeed: 3
+  mMaxSwimSpeed: 2
+  mMass: 100
   mGroundGravity: {x: 0, y: -0.98100007, z: 0}
   mAirGravity: {x: 0, y: -9.81, z: 0}
-  mWaterGravity: {x: 0, y: -9.81, z: 0}
-  mHealth: 0
-  mHealthMax: 0
-  mAttackDamage: 0
-  mAttackTime: 0
-  mAttackConeAngle: 0
-  mAttackConeRadius: 0
+  mWaterGravity: {x: 0, y: -0.981, z: 0}
+  mHealth: 100
+  mStartWithFullHealth: 1
+  mHealthMax: 100
+  mAttackDamage: 20
+  mAttackTime: 0.15
+  mAttackConeAngle: 30
+  mAttackConeRadius: 1.2
 --- !u!33 &997644444
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -605,17 +620,6 @@ CharacterController:
   m_SkinWidth: 0.015
   m_MinMoveDistance: 0
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &997644447
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 997644440}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e81877827bf5654a92bdcdc4a1b8a0f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1162618152
 GameObject:
   m_ObjectHideFlags: 0
@@ -703,6 +707,145 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2132158072}
   m_RootOrder: 0
+--- !u!1 &1361117527
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1361117532}
+  - 33: {fileID: 1361117531}
+  - 114: {fileID: 1361117530}
+  - 143: {fileID: 1361117529}
+  - 23: {fileID: 1361117528}
+  m_Layer: 0
+  m_Name: PawnBody (1)
+  m_TagString: Player
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &1361117528
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1361117527}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_Materials:
+  - {fileID: 10302, guid: 0000000000000000f000000000000000, type: 0}
+  m_SubsetIndices: 
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_SelectedWireframeHidden: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+--- !u!143 &1361117529
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1361117527}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.015
+  m_MinMoveDistance: 0
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1361117530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1361117527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4cbcda8f76fc51c4c831eab0e70358bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mBodyUseControllerPitch: 0
+  mBodyUseControllerYaw: 1
+  mBodyUseControllerRoll: 0
+  mSpeed: 0
+  mDirection: {x: 0, y: 0, z: 1}
+  mPlanarNormal: {x: 0, y: 1, z: 0}
+  mGroundMask:
+    serializedVersion: 2
+    m_Bits: 1
+  mWaterMask:
+    serializedVersion: 2
+    m_Bits: 16
+  mWalkAcceleration: 80
+  mSprintAcceleration: 70
+  mCrouchAcceleration: 50
+  mSwimAcceleration: 35
+  mGroundAccelerationFactor: 1
+  mAirAccelerationFactor: 0.1
+  mWaterAccelerationFactor: 0.8
+  mJumpAcceleration: 60
+  mJumpTimeMax: 0.15
+  mGroundFriction: 40
+  mGroundDrag: 0.8
+  mAirFriction: 0.1
+  mAirDrag: 0.01
+  mWaterFriction: 0.1
+  mWaterDrag: 0.99
+  mMaxWalkSpeed: 4
+  mMaxSprintSpeed: 10
+  mMaxCrouchSpeed: 2
+  mMaxSwimSpeed: 2
+  mMass: 100
+  mGroundGravity: {x: 0, y: -0.98100007, z: 0}
+  mAirGravity: {x: 0, y: -9.81, z: 0}
+  mWaterGravity: {x: 0, y: -0.981, z: 0}
+  mHealth: 100
+  mStartWithFullHealth: 1
+  mHealthMax: 100
+  mAttackDamage: 20
+  mAttackTime: 0.15
+  mAttackConeAngle: 30
+  mAttackConeRadius: 1.2
+--- !u!33 &1361117531
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1361117527}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1361117532
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1361117527}
+  m_LocalRotation: {x: -0, y: 0.52901644, z: -0, w: 0.84861165}
+  m_LocalPosition: {x: 3.9, y: 1.94, z: 9.09}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Children:
+  - {fileID: 1850663314}
+  m_Father: {fileID: 0}
+  m_RootOrder: 11
 --- !u!1 &1655827972
 GameObject:
   m_ObjectHideFlags: 0
@@ -862,6 +1005,47 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
+--- !u!1 &1850663313
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 1850663314}
+  - 114: {fileID: 1850663315}
+  m_Layer: 0
+  m_Name: PawnHead
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1850663314
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1850663313}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Children: []
+  m_Father: {fileID: 1361117532}
+  m_RootOrder: 0
+--- !u!114 &1850663315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1850663313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfcf730d90703454e89faa5b0c4bf6e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mBody: {fileID: 1361117530}
 --- !u!1 &1980069724
 GameObject:
   m_ObjectHideFlags: 0
