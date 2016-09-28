@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public struct DamageType {
     public const byte Default = 0;
@@ -44,7 +45,6 @@ public struct DamageType {
         return new DamageType(aOther);
     }
 }
-
 public struct DamageInfo {
     public float Amount;
     public float Force;
@@ -62,6 +62,10 @@ public struct DamageInfo {
     }
 }
 
+public interface Interactable {
+    void Interact(SurvivalPawn aUser);
+}
+
 public class SurvivalPawn : Pawn {
 
     #region Health stuff
@@ -74,7 +78,12 @@ public class SurvivalPawn : Pawn {
 
     public float Health {
         get { return mHealth; }
-        protected set { mHealth = Mathf.Clamp(value, 0, mHealthMax); }
+        protected set {
+            mHealth = Mathf.Clamp(value, 0, mHealthMax);
+            if(mHealth == 0) {
+                OnDeath();
+            }
+        }
     }
     public float HealthMax {
         get { return mHealthMax; }
@@ -160,6 +169,47 @@ public class SurvivalPawn : Pawn {
         return HitPawns.ToArray();
     }
     #endregion
+    #region Interact stuff
+    [SerializeField]
+    private float mInteractRange = 1f;
+    [SerializeField]
+    private float mInteractRadius = 0.1f;
+    
+    public float InteractRange {
+        get { return mInteractRange; }
+        protected set { mInteractRange = value; }
+    }
+    public float InteractRadius {
+        get { return mInteractRadius; }
+        protected set { mInteractRadius = value; }
+    }
+
+    protected Interactable[] GetInteractablesInRange() {
+        List<Interactable> InteractableList = new List<Interactable>();
+
+        Vector3 StartPos = transform.position;
+        Vector3 EndPos = StartPos + ControlRotation * Vector3.forward * InteractRange;
+
+        Collider[] InteractColliders = Physics.OverlapCapsule(StartPos, EndPos, InteractRadius);
+
+        Debug.DrawLine(StartPos, EndPos, Color.blue, 2f);
+
+        foreach(Collider InteractCollider in InteractColliders) {
+            if (InteractCollider.tag == "Interactable") {
+                Component[] HitComponents = InteractCollider.GetComponents<Component>();
+
+                foreach(Component HitComponent in HitComponents) {
+                    if (HitComponent is Interactable) {
+                        InteractableList.Add((Interactable)HitComponent);
+                    } 
+                }
+            }
+        }
+
+        return InteractableList.ToArray();
+    }
+
+    #endregion
 
     public override void Start() {
         base.Start();
@@ -175,5 +225,20 @@ public class SurvivalPawn : Pawn {
     public virtual void AttackEnd() {
 
     }
+    public virtual void InteractStart() {
+        Interactable[] Interacts = GetInteractablesInRange();
+
+        foreach(Interactable InteractInRange in Interacts) {
+            InteractInRange.Interact(this);
+        }
+    }
+    public virtual void InteractEnd() {
+
+    }
+
+    public virtual void OnDeath() {
+        
+    }
+
     #endregion
 }

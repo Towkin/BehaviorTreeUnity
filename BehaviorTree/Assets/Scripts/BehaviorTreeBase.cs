@@ -521,81 +521,81 @@ public class BTCond_InDistance<T> : BTCondition<T> where T : MonoBehaviour {
 public abstract class BTTask<T> : BTLeaf<T> {
     protected BTTask(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
 }
-public class BTTask_MoveTowards<T> : BTTask<T> where T : MonoBehaviour {
-    public override string NodeText {
-        get { return "Task: Move Towards\n" + TargetName + ", " + Speed.ToString(); }
-    }
+//public class BTTask_MoveTowards<T> : BTTask<T> where T : MonoBehaviour {
+//    public override string NodeText {
+//        get { return "Task: Move Towards\n" + TargetName + ", " + Speed.ToString(); }
+//    }
 
-    private string mTargetName = "";
-    public string TargetName {
-        get { return mTargetName; }
-        set { mTargetName = value; }
-    }
-    private float mSpeed = 0;
-    public float Speed {
-        get { return mSpeed; }
-        set { mSpeed = value; }
-    }
+//    private string mTargetName = "";
+//    public string TargetName {
+//        get { return mTargetName; }
+//        set { mTargetName = value; }
+//    }
+//    private float mSpeed = 0;
+//    public float Speed {
+//        get { return mSpeed; }
+//        set { mSpeed = value; }
+//    }
     
-    public BTTask_MoveTowards(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
-    public BTTask_MoveTowards(BehaviorTree<T> aBehaviorTree, string aTargetName, float aSpeed) : this(aBehaviorTree) {
-        TargetName = aTargetName;
-        Speed = aSpeed;
-    }
+//    public BTTask_MoveTowards(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
+//    public BTTask_MoveTowards(BehaviorTree<T> aBehaviorTree, string aTargetName, float aSpeed) : this(aBehaviorTree) {
+//        TargetName = aTargetName;
+//        Speed = aSpeed;
+//    }
 
-    protected override BehaviorState UpdateNode() {
-        if (mTargetName == "") {
-            return BehaviorState.Failure;
-        }
+//    protected override BehaviorState UpdateNode() {
+//        if (mTargetName == "") {
+//            return BehaviorState.Failure;
+//        }
 
-        GameObject Target = (GameObject)Blackboard.Objects[TargetName];
-        if (Target == null) {
-            // TODO: Error?
-            return BehaviorState.Failure;
-        }
+//        GameObject Target = (GameObject)Blackboard.Objects[TargetName];
+//        if (Target == null) {
+//            // TODO: Error?
+//            return BehaviorState.Failure;
+//        }
 
-        Vector3 Offset = Target.transform.position - Agent.transform.position;
-        Agent.transform.position += Offset.normalized * (Speed > 0 ? Mathf.Min(Offset.magnitude, Speed) : Speed);
+//        Vector3 Offset = Target.transform.position - Agent.transform.position;
+//        Agent.transform.position += Offset.normalized * (Speed > 0 ? Mathf.Min(Offset.magnitude, Speed) : Speed);
 
-        return BehaviorState.Success;
-    }
-}
-public class BTTask_MoveTo<T> : BTTask<T> where T : MonoBehaviour {
-    public override string NodeText {
-        get { return "MoveTo"; }
-    }
+//        return BehaviorState.Success;
+//    }
+//}
+//public class BTTask_MoveTo<T> : BTTask<T> where T : MonoBehaviour {
+//    public override string NodeText {
+//        get { return "MoveTo"; }
+//    }
 
-    private string mTargetName = "";
-    public string TargetName {
-        get { return mTargetName; }
-        set { mTargetName = value; }
-    }
-    private float mSpeed = 0;
-    public float Speed {
-        get { return mSpeed; }
-        set { mSpeed = value; }
-    }
+//    private string mTargetName = "";
+//    public string TargetName {
+//        get { return mTargetName; }
+//        set { mTargetName = value; }
+//    }
+//    private float mSpeed = 0;
+//    public float Speed {
+//        get { return mSpeed; }
+//        set { mSpeed = value; }
+//    }
 
-    public BTTask_MoveTo(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
-    public BTTask_MoveTo(BehaviorTree<T> aBehaviorTree, string aTargetName, float aSpeed) : this(aBehaviorTree) {
-        TargetName = aTargetName;
-        Speed = aSpeed;
-    }
+//    public BTTask_MoveTo(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
+//    public BTTask_MoveTo(BehaviorTree<T> aBehaviorTree, string aTargetName, float aSpeed) : this(aBehaviorTree) {
+//        TargetName = aTargetName;
+//        Speed = aSpeed;
+//    }
 
-    protected override BehaviorState UpdateNode() {
-        if (mTargetName == "" || Speed <= 0f) {
-            return BehaviorState.Failure;
-        }
+//    protected override BehaviorState UpdateNode() {
+//        if (mTargetName == "" || Speed <= 0f) {
+//            return BehaviorState.Failure;
+//        }
 
-        GameObject Target = (GameObject)Blackboard.Objects[TargetName];
-        if (Target == null) {
-            // TODO: Error?
-            return BehaviorState.Failure;
-        }
+//        GameObject Target = (GameObject)Blackboard.Objects[TargetName];
+//        if (Target == null) {
+//            // TODO: Error?
+//            return BehaviorState.Failure;
+//        }
 
-        Vector3 Offset = Target.transform.position - Agent.transform.position;
-        Agent.transform.position += Offset.normalized * Mathf.Min(Offset.magnitude, Speed);
+//        Vector3 Offset = Target.transform.position - Agent.transform.position;
+//        Agent.transform.position += Offset.normalized * Mathf.Min(Offset.magnitude, Speed);
 
-        return (Target.transform.position - Agent.transform.position).magnitude <= 0.01f ? BehaviorState.Success : BehaviorState.Running;
-    }
-}
+//        return (Target.transform.position - Agent.transform.position).magnitude <= 0.01f ? BehaviorState.Success : BehaviorState.Running;
+//    }
+//}

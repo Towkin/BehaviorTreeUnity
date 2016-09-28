@@ -28,8 +28,15 @@ public class PlayerSurvivalPawnController : SurvivalPawnController<SurvivalPawn>
         if (Input.GetButtonUp("Fire1")) {
             CallAttackEnd();
         }
+        if (Input.GetButtonDown("Interact")) {
+            CallInteractStart();
+        }
+        if (Input.GetButtonUp("Interact")) {
+            CallInteractEnd();
+        }
 
         RawMoveInput += new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Swim Up"), Input.GetAxis("Vertical"));
+        
         if (RawMoveInput != Vector3.zero) {
             CallMove(ConsumeMoveInput(), Time.deltaTime);
         }

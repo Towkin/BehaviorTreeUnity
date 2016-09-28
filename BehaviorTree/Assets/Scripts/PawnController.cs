@@ -140,23 +140,17 @@ public class PawnController<T> : MonoBehaviour where T : Pawn {
         }
     }
     void OnDisable() {
-        while(ControlledPawns.Count > 0) {
+        while (ControlledPawns.Count > 0) {
             RemovePawn(ControlledPawns[0]);
         }
     }
-
-	// Use this for initialization
-	void Start () {
-        
-	}
     
-
     /// <summary>
     /// Gets and resets accumulated movement input, clamped into a unit sphere.
     /// </summary>
     /// <returns>The movement input, with maximum magnitude of 1.</returns>
     protected Vector3 ConsumeMoveInput() {
-        Vector3 ReturnVector = RawMoveInput;
+        Vector3 ReturnVector = MoveInput;
         RawMoveInput = Vector3.zero;
 
         return ReturnVector;

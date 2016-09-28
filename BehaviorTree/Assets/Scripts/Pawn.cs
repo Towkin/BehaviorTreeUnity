@@ -332,6 +332,8 @@ public class Pawn : MonoBehaviour {
     [SerializeField]
     private Vector3 mWaterGravity = Physics.gravity;
 
+    [SerializeField]
+    private bool mRecieveInput = true;
 
     public LayerMask GroundMask {
         get { return mGroundMask; }
@@ -393,6 +395,10 @@ public class Pawn : MonoBehaviour {
     public float Mass {
         get { return mMass; }
         protected set { mMass = Mathf.Max(0f, value); }
+    }
+    public bool RecieveInput {
+        get { return mRecieveInput; }
+        protected set { mRecieveInput = value; }
     }
     
     /// <summary>
@@ -459,11 +465,14 @@ public class Pawn : MonoBehaviour {
 	}
     public virtual void LateUpdate () {
         UpdatePawnRotation(Time.deltaTime);
+        UpdatePawnVelocity(Time.deltaTime);
+        UpdatePawnPosition(Time.deltaTime);
+        UpdatePawnCondition();
     }
     public virtual void FixedUpdate() {
-        UpdatePawnVelocity(Time.fixedDeltaTime);
-        UpdatePawnPosition(Time.fixedDeltaTime);
-        UpdatePawnCondition();
+        //UpdatePawnVelocity(Time.fixedDeltaTime);
+        //UpdatePawnPosition(Time.fixedDeltaTime);
+        //UpdatePawnCondition();
     }
 
     protected virtual void UpdatePawnRotation(float aDeltaTime) {
@@ -552,6 +561,10 @@ public class Pawn : MonoBehaviour {
     #region Event Recievers
 
     public virtual void MoveInput(Vector3 aInputVector, float aDeltaTime) {
+        if (!RecieveInput) {
+            return;
+        }
+
         Vector3 CleanInput = IsInWater ? aInputVector.normalized : new Vector3(aInputVector.x, 0, aInputVector.z).normalized;
         Vector3 ForwardAdd = CleanInput * MoveAcceleration * aDeltaTime;
         Vector3 NewPlanarForwardVelocity = PlanarForwardVelocity + ForwardAdd;
@@ -560,6 +573,10 @@ public class Pawn : MonoBehaviour {
 
         Debug.DrawLine(transform.position, DebugCurrentVelocityPosition, Color.blue, 0.1f);
         Debug.DrawLine(DebugCurrentVelocityPosition, transform.position + transform.rotation * FromPlanar(NewPlanarForwardVelocity), Color.magenta, 0.1f);
+
+        if (aInputVector != Vector3.zero) {
+            Debug.DrawLine(transform.position, transform.position + new Vector3(0, 0.25f, 0), Color.cyan, 2f);
+        }
 
         // If the new speed is within current limits
         if(NewPlanarForwardVelocity.magnitude <= MaxControlSpeed) {
@@ -575,6 +592,10 @@ public class Pawn : MonoBehaviour {
         
     }
     public virtual void ViewInput(Quaternion aInputQuat, float aDeltaTime) {
+        if (!RecieveInput) {
+            return;
+        }
+
         ControlRotation = aInputQuat;
 
         if(BodyUseControllerPitch || BodyUseControllerRoll || BodyUseControllerYaw) {
@@ -593,7 +614,11 @@ public class Pawn : MonoBehaviour {
     }
 
     public virtual void JumpStart() {
-        if(IsGrounded) {
+        if (!RecieveInput) {
+            return;
+        }
+
+        if (IsGrounded) {
             JumpState = true;
             LastJumpStart = Time.time;
             JumpVector = PlanarNormal;
@@ -603,22 +628,30 @@ public class Pawn : MonoBehaviour {
         JumpState = false;
     }
     public virtual void CrouchStart() {
-        if(MoveState == PawnMoveState.Walking) {
+        if (!RecieveInput) {
+            return;
+        }
+
+        if (MoveState == PawnMoveState.Walking) {
             MoveState = PawnMoveState.Crouching;
         }
     }
     public virtual void CrouchEnd() {
-        if(MoveState == PawnMoveState.Crouching) {
+        if (MoveState == PawnMoveState.Crouching) {
             CancelMoveState();
         }
     }
     public virtual void SprintStart() {
-        if(MoveState == PawnMoveState.Walking) {
+        if (!RecieveInput) {
+            return;
+        }
+
+        if (MoveState == PawnMoveState.Walking) {
             MoveState = PawnMoveState.Sprinting;
         }
     }
     public virtual void SprintEnd() {
-        if(MoveState == PawnMoveState.Sprinting) {
+        if (MoveState == PawnMoveState.Sprinting) {
             CancelMoveState();
         }
     }
