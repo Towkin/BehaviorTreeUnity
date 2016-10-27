@@ -3,7 +3,7 @@ using System.Collections;
 
 public class PlayerSurvivalPawnController : SurvivalPawnController<SurvivalPawn> {
     
-    public virtual void Update () {
+    public override void Update () {
         if (Input.GetButtonDown("Jump")) {
             CallJumpStart();
         }
@@ -37,9 +37,6 @@ public class PlayerSurvivalPawnController : SurvivalPawnController<SurvivalPawn>
 
         RawMoveInput += new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Swim Up"), Input.GetAxis("Vertical"));
         
-        if (RawMoveInput != Vector3.zero) {
-            CallMove(ConsumeMoveInput(), Time.deltaTime);
-        }
 
         float ViewInputYaw = Input.GetAxis("Mouse X");
         float ViewInputPitch = Input.GetAxis("Mouse Y");
@@ -48,8 +45,8 @@ public class PlayerSurvivalPawnController : SurvivalPawnController<SurvivalPawn>
             ControlRotationYaw += ViewInputYaw;
             //ControlRotationPitch = Mathf.Clamp(ControlRotationPitch + ViewInputPitch, -89, 89);
             ControlRotationPitch = ControlRotationPitch + ViewInputPitch;
-
-            CallView(ControlRotationQuat, Time.deltaTime);
         }
+
+        base.Update();
     }
 }

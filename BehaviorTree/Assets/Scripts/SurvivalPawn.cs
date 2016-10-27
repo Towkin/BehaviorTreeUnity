@@ -62,11 +62,14 @@ public struct DamageInfo {
     }
 }
 
-public interface Interactable {
+public interface IInteractable {
     void Interact(SurvivalPawn aUser);
 }
+public interface IDamagable {
+    void TakeDamage(DamageInfo aInfo);
+}
 
-public class SurvivalPawn : Pawn {
+public class SurvivalPawn : Pawn, IDamagable {
 
     #region Health stuff
     [SerializeField]
@@ -101,7 +104,11 @@ public class SurvivalPawn : Pawn {
         Health -= aInfo.Amount;
 
         if (aInfo.Type == DamageType.Blunt) {
-            Velocity += aInfo.Direction * (aInfo.Force / Mass);
+            if (IsAlive) {
+                Velocity += aInfo.Direction * (aInfo.Force / (Mass * Mass));
+            } else if(GetComponent<Rigidbody>()) {
+                GetComponent<Rigidbody>().AddForceAtPosition(aInfo.Direction * aInfo.Force, aInfo.Dealer.transform.position);
+            }
         }
     }
     #endregion
@@ -115,7 +122,7 @@ public class SurvivalPawn : Pawn {
     [SerializeField]
     private float mAttackConeAngle = 30f;
     [SerializeField]
-    private float mAttackConeRadius = 1.2f;
+    private float mAttackConeRadius = 1.8f;
 
     public float AttackDamage {
         get { return mAttackDamage; }
@@ -142,9 +149,9 @@ public class SurvivalPawn : Pawn {
         if (CanAttack) {
             LastAttackTime = Time.time;
 
-            SurvivalPawn[] AttackedPawns = PawnsInAttackCone();
-            foreach (SurvivalPawn AttackedPawn in AttackedPawns) {
-                AttackedPawn.TakeDamage(new DamageInfo(AttackDamage, DamageType.Blunt, 1000f, gameObject, ControlRotation * Vector3.forward));
+            IDamagable[] AttackedObjects = DamagableInAttackCone();
+            foreach (IDamagable AttackedObject in AttackedObjects) {
+                AttackedObject.TakeDamage(new DamageInfo(AttackDamage, DamageType.Blunt, 10000f, gameObject, ControlRotation * Vector3.forward));
             }
 
             for (float Rad = 0; Rad < Mathf.PI * 2; Rad += Mathf.PI * 2 / 32) {
@@ -154,19 +161,23 @@ public class SurvivalPawn : Pawn {
             }
         }
     }
-    public SurvivalPawn[] PawnsInAttackCone() {
-        List<SurvivalPawn> HitPawns = new List<SurvivalPawn>();
+    public IDamagable[] DamagableInAttackCone() {
+        List<IDamagable> HitDamagables = new List<IDamagable>();
 
         Collider[] PawnColliders = Physics.OverlapSphere(transform.position, AttackConeRadius);
         foreach (Collider PawnCollider in PawnColliders) {
-            SurvivalPawn HitPawn = PawnCollider.GetComponent<SurvivalPawn>();
+            if(Vector3.Dot(ControlRotation * Vector3.forward, (PawnCollider.transform.position - transform.position).normalized) < Mathf.Cos(AttackConeAngle)) {
+                continue;
+            }
 
-            if (HitPawn && HitPawn != this) {
-                HitPawns.Add(HitPawn);
+            IDamagable HitDamagable = PawnCollider.GetComponent<IDamagable>();
+
+            if (HitDamagable != null && HitDamagable != this) {
+                HitDamagables.Add(HitDamagable);
             }
         }
 
-        return HitPawns.ToArray();
+        return HitDamagables.ToArray();
     }
     #endregion
     #region Interact stuff
@@ -184,8 +195,8 @@ public class SurvivalPawn : Pawn {
         protected set { mInteractRadius = value; }
     }
 
-    protected Interactable[] GetInteractablesInRange() {
-        List<Interactable> InteractableList = new List<Interactable>();
+    protected IInteractable[] GetInteractablesInRange() {
+        List<IInteractable> InteractableList = new List<IInteractable>();
 
         Vector3 StartPos = transform.position;
         Vector3 EndPos = StartPos + ControlRotation * Vector3.forward * InteractRange;
@@ -199,8 +210,8 @@ public class SurvivalPawn : Pawn {
                 Component[] HitComponents = InteractCollider.GetComponents<Component>();
 
                 foreach(Component HitComponent in HitComponents) {
-                    if (HitComponent is Interactable) {
-                        InteractableList.Add((Interactable)HitComponent);
+                    if (HitComponent is IInteractable) {
+                        InteractableList.Add((IInteractable)HitComponent);
                     } 
                 }
             }
@@ -226,9 +237,9 @@ public class SurvivalPawn : Pawn {
 
     }
     public virtual void InteractStart() {
-        Interactable[] Interacts = GetInteractablesInRange();
+        IInteractable[] Interacts = GetInteractablesInRange();
 
-        foreach(Interactable InteractInRange in Interacts) {
+        foreach(IInteractable InteractInRange in Interacts) {
             InteractInRange.Interact(this);
         }
     }
@@ -237,8 +248,23 @@ public class SurvivalPawn : Pawn {
     }
 
     public virtual void OnDeath() {
+        if(GetComponent<Rigidbody>() == null) {
+            Rigidbody Body = gameObject.AddComponent<Rigidbody>();
+            Body.mass = Mass;
+            Body.velocity = Velocity;
+        }
+
+        if (MovementController && GetComponent<CapsuleCollider>() == null) {
+            MovementController.enabled = false;
+            CapsuleCollider NewCollider = gameObject.AddComponent<CapsuleCollider>();
+
+            NewCollider.height = MovementController.height;
+            NewCollider.radius = MovementController.radius;
+            NewCollider.center = MovementController.center;
+        }
         
     }
 
     #endregion
 }
+

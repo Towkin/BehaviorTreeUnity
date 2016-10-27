@@ -164,15 +164,20 @@ public abstract class BTNode {
             }
             ReturnColor = Color.Lerp(ReturnColor, Color.gray, 1 - Mathf.Pow(0.15f, Time.realtimeSinceStartup - LastBehaviorUpdateTime));
 
-            ReturnColor.a = 0.15f;
+            ReturnColor.a = 0.8f;
             return ReturnColor;
         }
     }
+    private Texture2D ReturnTexture;
+
     protected virtual Texture2D BoxTexture {
         get {
-            Texture2D ReturnTexture = new Texture2D(1, 1);
 
-            ReturnTexture.wrapMode = TextureWrapMode.Repeat;
+            if (ReturnTexture == null) {
+                ReturnTexture = new Texture2D(1, 1);
+
+                ReturnTexture.wrapMode = TextureWrapMode.Repeat;
+            }
             ReturnTexture.SetPixel(0, 0, BoxColor);
             ReturnTexture.Apply();
 
@@ -186,11 +191,17 @@ public abstract class BTNode {
     public virtual Vector2 GetRenderSize() {
         return NodeSize;
     }
+
+    protected GUIStyle BoxStyle;
+    
     public virtual void RenderNode(Vector2 aFrom) {
-        GUIStyle BoxStyle = new GUIStyle();
+        if (BoxStyle == null) {
+            BoxStyle = new GUIStyle();
+            BoxStyle.padding = new RectOffset(8, 8, 8, 8);
+            BoxStyle.overflow = new RectOffset(-1, -1, -1, -1);
+        }
         BoxStyle.normal.background = BoxTexture;
-        BoxStyle.padding = new RectOffset(8, 8, 8, 8);
-        BoxStyle.overflow = new RectOffset(-1, -1, -1, -1);
+        
         GUI.Box(new Rect(aFrom, NodeSize), NodeText, BoxStyle);
         
     }
@@ -243,10 +254,12 @@ public abstract class BTComposite : BTNode {
         return new Vector2(Mathf.Max(NodeSize.x, TotalRenderSize.x), Mathf.Max(NodeSize.y, TotalRenderSize.y));
     }
     public override void RenderNode(Vector2 aFrom) {
-        GUIStyle BoxStyle = new GUIStyle();
+        if (BoxStyle == null) {
+            BoxStyle = new GUIStyle();
+            BoxStyle.padding = new RectOffset(8, 8, 8, 8);
+            BoxStyle.overflow = new RectOffset(-2, -2, -2, -2);
+        }
         BoxStyle.normal.background = BoxTexture;
-        BoxStyle.padding = new RectOffset(8, 8, 8, 8);
-        BoxStyle.overflow = new RectOffset(-2, -2, -2, -2);
         GUI.Box(new Rect(aFrom - ChildNodeOffset / 2, GetRenderSize() + ChildNodeOffset), GUIContent.none, BoxStyle);
 
         base.RenderNode(new Vector2(GetRenderSize().x / 2 - NodeSize.x / 2, 0) + aFrom);
@@ -479,13 +492,13 @@ public abstract class BTCondition<T> : BTLeaf<T> {
 }
 public class BTCond_InDistance<T> : BTCondition<T> where T : MonoBehaviour {
     public override string NodeText {
-        get { return "Condition: In Distance\n" + TargetName + ", " + Distance.ToString(); }
+        get { return "Condition: In Distance\n" + (Target == null ? "nothing" : Target.name) + ", " + Distance.ToString(); }
     }
-
-    private string mTargetName = "";
-    public string TargetName {
-        get { return mTargetName; }
-        set { mTargetName = value; }
+    
+    private GameObject mTarget;
+    public GameObject Target {
+        get { return mTarget; }
+        set { mTarget = value; }
     }
     private float mDistance = 0;
     public float Distance {
@@ -494,19 +507,17 @@ public class BTCond_InDistance<T> : BTCondition<T> where T : MonoBehaviour {
     }
 
     public BTCond_InDistance(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
-    public BTCond_InDistance(BehaviorTree<T> aBehaviorTree, string aTargetName, float aDistance) : this(aBehaviorTree) {
-        TargetName = aTargetName;
+    public BTCond_InDistance(BehaviorTree<T> aBehaviorTree, GameObject aTarget, float aDistance) : this(aBehaviorTree) {
+        Target = aTarget;
         Distance = aDistance;
     }
 
     protected override BehaviorState UpdateNode() {
-        if(mTargetName == "" || Distance < 0) {
+        if(Distance < 0) {
             return BehaviorState.Failure;
         }
 
-        GameObject Target = (GameObject)Blackboard.Objects[TargetName];
         if(Target == null) {
-            // TODO: Error?
             return BehaviorState.Failure;
         }
 

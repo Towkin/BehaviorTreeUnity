@@ -3,11 +3,11 @@ using System.Collections;
 
 public class SurvivalPawnController<T> : PawnController<T> where T : SurvivalPawn {
 
-    protected event InputButtonEvent eOnAttackStart;    protected void CallAttackStart()    { if (eOnAttackStart != null)   eOnAttackStart(); }
-    protected event InputButtonEvent eOnAttackEnd;      protected void CallAttackEnd()      { if (eOnAttackEnd != null)     eOnAttackEnd(); }
+    protected event InputButtonEvent eOnAttackStart;    public void CallAttackStart()    { if (eOnAttackStart != null)   eOnAttackStart(); }
+    protected event InputButtonEvent eOnAttackEnd;      public void CallAttackEnd()      { if (eOnAttackEnd != null)     eOnAttackEnd(); }
 
-    protected event InputButtonEvent eOnInteractStart;  protected void CallInteractStart()  { if (eOnInteractStart != null) eOnInteractStart(); }
-    protected event InputButtonEvent eOnInteractEnd;    protected void CallInteractEnd()    { if (eOnInteractEnd != null)   eOnInteractEnd(); }
+    protected event InputButtonEvent eOnInteractStart;  public void CallInteractStart()  { if (eOnInteractStart != null) eOnInteractStart(); }
+    protected event InputButtonEvent eOnInteractEnd;    public void CallInteractEnd()    { if (eOnInteractEnd != null)   eOnInteractEnd(); }
 
     protected override void AddEvents(T aPawn) {
         base.AddEvents(aPawn);

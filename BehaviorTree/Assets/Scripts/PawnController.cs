@@ -4,33 +4,33 @@ using System.Collections.Generic;
 
 public class PawnController<T> : MonoBehaviour where T : Pawn {
 
-
+    [SerializeField]
     private Quaternion mControlRotation;
     /// <summary>
     /// The "aiming" of the Controller, as a global rotation.
     /// </summary>
     public Quaternion ControlRotationQuat {
         get { return mControlRotation; }
-        protected set { mControlRotation = value; }
+        set { mControlRotation = value; }
     }
     /// <summary>
     /// The ControlRotation as modifiable euler angles.
     /// </summary>
     public Vector3 ControlRotationEuler {
         get { return mControlRotation.eulerAngles; }
-        protected set { mControlRotation.eulerAngles = value; }
+        set { mControlRotation.eulerAngles = value; }
     }
     public float ControlRotationPitch {
         get { return mControlRotation.eulerAngles.x; }
-        protected set { mControlRotation.eulerAngles = new Vector3(value, ControlRotationYaw, ControlRotationRoll); }
+        set { mControlRotation.eulerAngles = new Vector3(value, ControlRotationYaw, ControlRotationRoll); }
     }
     public float ControlRotationYaw {
         get { return mControlRotation.eulerAngles.y; }
-        protected set { mControlRotation.eulerAngles = new Vector3(ControlRotationPitch, value, ControlRotationRoll); }
+        set { mControlRotation.eulerAngles = new Vector3(ControlRotationPitch, value, ControlRotationRoll); }
     }
     public float ControlRotationRoll {
         get { return mControlRotation.eulerAngles.z; }
-        protected set { mControlRotation.eulerAngles = new Vector3(ControlRotationPitch, ControlRotationYaw, value); }
+        set { mControlRotation.eulerAngles = new Vector3(ControlRotationPitch, ControlRotationYaw, value); }
     }
 
     private Vector3 mRawMoveInput = Vector3.zero;
@@ -39,7 +39,7 @@ public class PawnController<T> : MonoBehaviour where T : Pawn {
     /// </summary>
     public Vector3 RawMoveInput {
         get { return mRawMoveInput; }
-        protected set { mRawMoveInput = value; }
+        set { mRawMoveInput = value; }
     }
     /// <summary>
     /// Input adjusted to fit inside a unit circle.
@@ -61,15 +61,15 @@ public class PawnController<T> : MonoBehaviour where T : Pawn {
     protected delegate void InputVectorEvent(Vector3 aInput, float aDeltaTime);
     protected delegate void InputQuatEvent(Quaternion aInput, float aDeltaTime);
 
-    protected event InputVectorEvent eOnMove;           protected void CallMove(Vector3 aInput, float aDeltaTime)       { if(eOnMove != null) eOnMove(aInput, aDeltaTime); }
-    protected event InputQuatEvent eOnView;             protected void CallView(Quaternion aInput, float aDeltaTime)    { if(eOnView != null) eOnView(aInput, aDeltaTime); }
+    protected event InputVectorEvent eOnMove;           private void CallMove(Vector3 aInput, float aDeltaTime)       { if(eOnMove != null) eOnMove(aInput, aDeltaTime); }
+    protected event InputQuatEvent eOnView;             private void CallView(Quaternion aInput, float aDeltaTime)    { if(eOnView != null) eOnView(aInput, aDeltaTime); }
 
-    protected event InputButtonEvent eOnJumpStart;      protected void CallJumpStart()      { if(eOnJumpStart != null)      eOnJumpStart(); }
-    protected event InputButtonEvent eOnJumpEnd;        protected void CallJumpEnd()        { if(eOnJumpEnd != null)        eOnJumpEnd(); }
-    protected event InputButtonEvent eOnSprintStart;    protected void CallSprintStart()    { if(eOnSprintStart != null)    eOnSprintStart(); }
-    protected event InputButtonEvent eOnSprintEnd;      protected void CallSprintEnd()      { if(eOnSprintEnd != null)      eOnSprintEnd(); }
-    protected event InputButtonEvent eOnCrouchStart;    protected void CallCrouchStart()    { if(eOnCrouchStart != null)    eOnCrouchStart(); }
-    protected event InputButtonEvent eOnCrouchEnd;      protected void CallCrouchEnd()      { if(eOnCrouchEnd != null)      eOnCrouchEnd(); }
+    protected event InputButtonEvent eOnJumpStart;      public void CallJumpStart()      { if(eOnJumpStart != null)      eOnJumpStart(); }
+    protected event InputButtonEvent eOnJumpEnd;        public void CallJumpEnd()        { if(eOnJumpEnd != null)        eOnJumpEnd(); }
+    protected event InputButtonEvent eOnSprintStart;    public void CallSprintStart()    { if(eOnSprintStart != null)    eOnSprintStart(); }
+    protected event InputButtonEvent eOnSprintEnd;      public void CallSprintEnd()      { if(eOnSprintEnd != null)      eOnSprintEnd(); }
+    protected event InputButtonEvent eOnCrouchStart;    public void CallCrouchStart()    { if(eOnCrouchStart != null)    eOnCrouchStart(); }
+    protected event InputButtonEvent eOnCrouchEnd;      public void CallCrouchEnd()      { if(eOnCrouchEnd != null)      eOnCrouchEnd(); }
 
     [SerializeField]
     private List<T> mInitialControlledPawns = new List<T>();
@@ -144,7 +144,19 @@ public class PawnController<T> : MonoBehaviour where T : Pawn {
             RemovePawn(ControlledPawns[0]);
         }
     }
-    
+
+    public virtual void Update() {
+        CallView(ControlRotationQuat, Time.deltaTime);
+    }
+    public virtual void FixedUpdate() {
+        CallMove(ConsumeMoveInput(), Time.fixedDeltaTime);
+    }
+
+
+    public void AddMoveInput(Vector3 aInput) {
+        RawMoveInput += aInput;
+    }
+
     /// <summary>
     /// Gets and resets accumulated movement input, clamped into a unit sphere.
     /// </summary>

@@ -146,7 +146,7 @@ public class Pawn : MonoBehaviour {
     [SerializeField]
     private Vector3 mPlanarNormal = Vector3.up;
     /// <summary>
-    /// The pawn's speed as scalar in m/s. same as Velocity magnitude, but cheaper performance-wise.
+    /// The pawn's speed as scalar in m/s. Same as Velocity magnitude, but cheaper performance-wise.
     /// Setting this to negative will cause Direction to invert.
     /// </summary>
     public float Speed {
@@ -165,7 +165,7 @@ public class Pawn : MonoBehaviour {
         set { PlanarVelocity = PlanarDirection * value; }
     }
     /// <summary>
-    /// The last updated Velocity direction of the Pawn. Also updates PlanarDirection is applicable.
+    /// The last updated Velocity direction of the Pawn.
     /// </summary>
     public Vector3 Direction {
         get { return mDirection; }
@@ -173,17 +173,11 @@ public class Pawn : MonoBehaviour {
             // Keep old direction if new value is zero.
             if(value != Vector3.zero) {
                 mDirection = value.normalized;
-
-                // If the set Direction is parallell to the PlanarNormal, do not update the PlanarDirection.
-                // 0.999f is a number close enough to 1, where the new Direction is essentially parallell to PlanarNormal.
-                //if(Mathf.Abs(Vector3.Dot(Direction, PlanarNormal)) <= 0.999f) {
-                //    mPlanarDirection = ToPlanar(Direction).normalized;
-                //}
             }
         }
     }
     /// <summary>
-    /// The 2d Direction on plane defined by the PlanarNormal. Automatically updated on Direction change.
+    /// The Direction on plane defined by the PlanarNormal.
     /// </summary>
     public Vector3 PlanarDirection {
         get { return ToPlanar(Direction); }
@@ -196,16 +190,14 @@ public class Pawn : MonoBehaviour {
         protected set {
             if(value != Vector3.zero) {
                 mPlanarNormal = value.normalized;
-                // Update planar direction, which is only updated through Direction update... Properties, yay!
-                Direction = Direction;
             }
         }
     }
     /// <summary>
-    /// Projects and rotates a given vector by the Pawn's PlanarNormal, returning the resulting vector on the 2d-plane defined by the PlanarNormal.
+    /// Projects and rotates a given vector by the Pawn's PlanarNormal, returning the resulting vector on the plane defined by the PlanarNormal.
     /// </summary>
     /// <param name="aVector">The vector to project and rotate.</param>
-    /// <returns>The vector given on the 2d-plane.</returns>
+    /// <returns>The vector given on the plane.</returns>
     public Vector3 ToPlanar(Vector3 aVector) {
         //// Project the Direction onto the plane defined by PlanarNormal. Rotate that projection to the plane's coordinate system.
         //Vector3 ProjectedRotated = Quaternion.FromToRotation(Quaternion.Inverse(transform.rotation) * PlanarNormal, Vector3.up) * Vector3.ProjectOnPlane(aVector, PlanarNormal);
@@ -215,22 +207,22 @@ public class Pawn : MonoBehaviour {
 
         // New method, testing
         //return Quaternion.FromToRotation(Quaternion.Inverse(transform.rotation) * PlanarNormal, Vector3.up) * Vector3.ProjectOnPlane(aVector, PlanarNormal);
-        return Quaternion.FromToRotation(Quaternion.Inverse(transform.rotation) * PlanarNormal, Vector3.up) * aVector;
+        return Quaternion.FromToRotation(Quaternion.Inverse(ControlRotation) * PlanarNormal, Vector3.up) * aVector;
     }
     /// <summary>
-    /// Rotates a given 2d-vector from the plane defined by the PlanarNormal to the global coordinate system, returning a 3d-vector.
+    /// Rotates a given 3d-vector from the plane defined by the PlanarNormal to the global coordinate system, returning a 3d-vector.
     /// </summary>
     /// <param name="aVector">The vector to rotate.</param>
-    /// <returns>The 3d representation of the 2d-vector on the PlanarNormal.</returns>
+    /// <returns>A representation of the vector on the PlanarNormal.</returns>
     public Vector3 FromPlanar(Vector3 aVector) {
         // Rotate the vector to global coordinate system.
         //return Quaternion.FromToRotation(Vector3.up, Quaternion.Inverse(transform.rotation) * PlanarNormal) * new Vector3(aVector.x, 0, aVector.y);
 
         // New method, testing
-        return Quaternion.FromToRotation(Vector3.up, Quaternion.Inverse(transform.rotation) * PlanarNormal) * aVector;
+        return Quaternion.FromToRotation(Vector3.up, Quaternion.Inverse(ControlRotation) * PlanarNormal) * aVector;
     }
     /// <summary>
-    /// Global velocity in m/s.
+    /// Global velocity in m/s. Use Speed for magnitude. (Velocity is represented as Direction and Speed)
     /// </summary>
     public Vector3 Velocity {
         get { return mDirection * mSpeed; }
@@ -240,11 +232,11 @@ public class Pawn : MonoBehaviour {
         }
     }
     /// <summary>
-    /// Velocity rotated by the Pawn's transform, relative to global, in m/s.
+    /// Velocity rotated by the ControlRotation, relative to global, in m/s.
     /// </summary>
     public Vector3 ForwardVelocity {
-        get { return Quaternion.Inverse(transform.rotation) * Velocity; }
-        set { Velocity = transform.rotation * value; }
+        get { return Quaternion.Inverse(ControlRotation) * Velocity; }
+        set { Velocity = ControlRotation * value; }
     }
     /// <summary>
     /// The velocity along the plane defined by the PlanarNormal.
@@ -476,7 +468,23 @@ public class Pawn : MonoBehaviour {
     }
 
     protected virtual void UpdatePawnRotation(float aDeltaTime) {
-        
+        if(MovementController == null || !MovementController.enabled) {
+            return;
+        }
+
+        if (BodyUseControllerPitch || BodyUseControllerRoll || BodyUseControllerYaw) {
+            Vector3 BaseEuler = transform.rotation.eulerAngles;
+            Vector3 ControlEuler = ControlRotation.eulerAngles;
+
+            Quaternion BodyRotation = new Quaternion();
+            BodyRotation.eulerAngles = new Vector3(
+                BodyUseControllerPitch ? ControlEuler.x : BaseEuler.x,
+                BodyUseControllerYaw ? ControlEuler.y : BaseEuler.y,
+                BodyUseControllerRoll ? ControlEuler.z : BaseEuler.z
+            );
+
+            transform.rotation = BodyRotation;
+        }
     }
     protected virtual void UpdatePawnVelocity(float aDeltaTime) {
         Velocity += PawnGravity * aDeltaTime;
@@ -488,9 +496,11 @@ public class Pawn : MonoBehaviour {
         }
     }
     protected virtual void UpdatePawnPosition(float aDeltaTime) {
-        
-        MovementController.Move(Velocity * aDeltaTime);
-        Velocity = MovementController.velocity;
+
+        if (MovementController && MovementController.enabled) {
+            MovementController.Move(Velocity * aDeltaTime);
+            Velocity = MovementController.velocity;
+        }
 
         Vector3[] Points = new Vector3[8];
         for(int i = 0; i < 8; i++) {
@@ -508,6 +518,10 @@ public class Pawn : MonoBehaviour {
         // Default to Air and PlanarNormal as up.
         PlanarNormal = Vector3.up;
         MoveCondition = PawnMoveCondition.Air;
+
+        if(MovementController == null) {
+            return;
+        }
 
         float Radius = MovementController.radius + MovementController.skinWidth;
         Vector3 BottomCenter = transform.position + MovementController.center - new Vector3(0, MovementController.height / 2 - Radius, 0);
@@ -597,20 +611,6 @@ public class Pawn : MonoBehaviour {
         }
 
         ControlRotation = aInputQuat;
-
-        if(BodyUseControllerPitch || BodyUseControllerRoll || BodyUseControllerYaw) {
-            Vector3 BaseEuler = transform.rotation.eulerAngles;
-            Vector3 ControlEuler = aInputQuat.eulerAngles;
-
-            Quaternion BodyRotation = new Quaternion();
-            BodyRotation.eulerAngles = new Vector3(
-                BodyUseControllerPitch ? ControlEuler.x : BaseEuler.x,
-                BodyUseControllerYaw ? ControlEuler.y : BaseEuler.y,
-                BodyUseControllerRoll ? ControlEuler.z : BaseEuler.z
-            );
-
-            transform.rotation = BodyRotation;
-        }
     }
 
     public virtual void JumpStart() {
