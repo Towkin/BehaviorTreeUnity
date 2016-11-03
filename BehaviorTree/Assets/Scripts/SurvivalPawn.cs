@@ -172,7 +172,7 @@ public class SurvivalPawn : Pawn, IDamagable {
 
             IDamagable HitDamagable = PawnCollider.GetComponent<IDamagable>();
 
-            if (HitDamagable != null && HitDamagable != this) {
+            if (HitDamagable != null && (object)HitDamagable != this) {
                 HitDamagables.Add(HitDamagable);
             }
         }

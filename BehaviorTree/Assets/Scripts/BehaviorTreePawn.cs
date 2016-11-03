@@ -32,14 +32,20 @@ public class BTTask_MoveTowards<T, Y> : BTTask<T> where T : PawnController<Y> wh
         get { return "Task: Move towards\n" + (Target == null ? "Nothing" : Target.name); }
     }
 
-    public BTTask_MoveTowards(BehaviorTree<T> aBehaviorTree, Transform aTarget = null) : base(aBehaviorTree) {
+    public BTTask_MoveTowards(BehaviorTree<T> aBehaviorTree, Transform aTarget = null, bool aCanJump = true) : base(aBehaviorTree) {
         mTarget = aTarget;
+        mCanJump = aCanJump;
     }
 
     private Transform mTarget;
     public Transform Target {
         get { return mTarget; }
         set { mTarget = value; }
+    }
+    private bool mCanJump;
+    public bool CanJump {
+        get { return mCanJump; }
+        set { mCanJump = value; }
     }
 
     protected override BehaviorState UpdateNode() {
@@ -51,6 +57,11 @@ public class BTTask_MoveTowards<T, Y> : BTTask<T> where T : PawnController<Y> wh
         }
         
         Agent.AddMoveInput(Quaternion.Inverse(Agent.ControlRotationQuat) * (Target.position - Agent.ControlledPawns[0].transform.position));
+
+        if(CanJump && Agent.GetMoveCondition() == PawnMoveCondition.Ground && Target.position.y > Agent.ControlledPawns[0].transform.position.y + 1.0f) {
+            Agent.CallJumpStart();
+
+        }
 
         return BehaviorState.Success;
     }
@@ -176,5 +187,39 @@ public class BTTask_Attack<T, Y> : BTTask<T> where T : SurvivalPawnController<Y>
         }
         
         return BehaviorState.Running;
+    }
+}
+class BTTask_Sprint<T, Y> : BTTask<T> where T : PawnController<Y> where Y : Pawn {
+    public override string NodeText {
+        get { return "Task: Sprint\n" + (EnableSprint ? "Enable" : "Disable"); }
+    }
+
+    private bool mEnableSprint;
+    public bool EnableSprint {
+        get { return mEnableSprint; }
+        set { mEnableSprint = value; }
+    }
+
+    
+
+    public BTTask_Sprint(BehaviorTree<T> aBehaviorTree, bool aEnableSprint = true) : base(aBehaviorTree) {
+        mEnableSprint = aEnableSprint;
+    }
+
+    protected override BehaviorState UpdateNode() {
+        if(Agent == null) {
+            return BehaviorState.Error;
+        }
+        if(mEnableSprint) {
+            if (Agent.GetMoveState() != PawnMoveState.Sprinting) {
+                Agent.CallSprintStart();
+            }
+        } else {
+            if (Agent.GetMoveState() == PawnMoveState.Sprinting) {
+                Agent.CallSprintEnd();
+            }
+        }
+        
+        return BehaviorState.Success;
     }
 }

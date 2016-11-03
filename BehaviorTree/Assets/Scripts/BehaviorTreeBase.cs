@@ -164,7 +164,7 @@ public abstract class BTNode {
             }
             ReturnColor = Color.Lerp(ReturnColor, Color.gray, 1 - Mathf.Pow(0.15f, Time.realtimeSinceStartup - LastBehaviorUpdateTime));
 
-            ReturnColor.a = 0.8f;
+            ReturnColor.a = 0.2f;
             return ReturnColor;
         }
     }
@@ -490,13 +490,19 @@ public abstract class BTLeaf<T> : BTNode {
 public abstract class BTCondition<T> : BTLeaf<T> {
     protected BTCondition(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
 }
-public class BTCond_InDistance<T> : BTCondition<T> where T : MonoBehaviour {
+public class BTCond_InDistance<T> : BTCondition<T> {
     public override string NodeText {
-        get { return "Condition: In Distance\n" + (Target == null ? "nothing" : Target.name) + ", " + Distance.ToString(); }
+        get { return "Condition: In Distance\n" + (Origin == null ? "nothing" : Origin.name) + ",\n" + (Target == null ? "nothing" : Target.name) + ",\n" + Distance.ToString(); }
     }
-    
-    private GameObject mTarget;
-    public GameObject Target {
+
+
+    private Transform mOrigin;
+    public Transform Origin {
+        get { return mOrigin; }
+        set { mOrigin = value; }
+    }
+    private Transform mTarget;
+    public Transform Target {
         get { return mTarget; }
         set { mTarget = value; }
     }
@@ -506,8 +512,8 @@ public class BTCond_InDistance<T> : BTCondition<T> where T : MonoBehaviour {
         set { mDistance = value; }
     }
 
-    public BTCond_InDistance(BehaviorTree<T> aBehaviorTree) : base(aBehaviorTree) { }
-    public BTCond_InDistance(BehaviorTree<T> aBehaviorTree, GameObject aTarget, float aDistance) : this(aBehaviorTree) {
+    public BTCond_InDistance(BehaviorTree<T> aBehaviorTree, Transform aOrigin, Transform aTarget, float aDistance) : base(aBehaviorTree) {
+        Origin = aOrigin;
         Target = aTarget;
         Distance = aDistance;
     }
@@ -517,13 +523,14 @@ public class BTCond_InDistance<T> : BTCondition<T> where T : MonoBehaviour {
             return BehaviorState.Failure;
         }
 
-        if(Target == null) {
+        if(Origin == null || Target == null) {
             return BehaviorState.Failure;
         }
 
-        if((Target.transform.position - Agent.transform.position).magnitude > Distance) {
+        if((Target.position - Origin.position).magnitude > Distance) {
             return BehaviorState.Failure;
         }
+
         return BehaviorState.Success;
     }
 }

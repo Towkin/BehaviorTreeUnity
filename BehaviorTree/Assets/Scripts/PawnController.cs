@@ -153,6 +153,19 @@ public class PawnController<T> : MonoBehaviour where T : Pawn {
     }
 
 
+    public PawnMoveState GetMoveState(int aPawnIndex = 0) {
+        if(ControlledPawns.Count >= aPawnIndex + 1) {
+            return ControlledPawns[aPawnIndex].MoveState;
+        }
+        throw new System.NotImplementedException();
+    }
+    public PawnMoveCondition GetMoveCondition(int aPawnIndex = 0) {
+        if(ControlledPawns.Count >= aPawnIndex + 1) {
+            return ControlledPawns[aPawnIndex].MoveCondition;
+        }
+        throw new System.NotImplementedException();
+    }
+
     public void AddMoveInput(Vector3 aInput) {
         RawMoveInput += aInput;
     }
