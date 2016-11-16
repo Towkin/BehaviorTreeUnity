@@ -5,6 +5,16 @@ public class PlayerPawnController : PawnController<Pawn> {
     
 	// Update is called once per frame
 	public override void Update () {
+
+        if(Input.GetButtonDown("Fire1")) {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        if(Input.GetKeyDown(KeyCode.Escape)) {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
         if(Input.GetButtonDown("Jump")) {
             CallJumpStart();
         }

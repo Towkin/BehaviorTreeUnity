@@ -127,9 +127,9 @@ MeshRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 26690783}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_Enabled: 0
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -235,7 +235,7 @@ MonoBehaviour:
   mFoeGoal: {fileID: 1208785461}
   mHomeGoal: {fileID: 1344316272}
   mDefendDistance: 30
-  mSprintDistance: 4
+  mSprintDistance: 20
 --- !u!143 &55778652
 CharacterController:
   m_ObjectHideFlags: 0
@@ -680,8 +680,8 @@ MonoBehaviour:
   mBall: {fileID: 942791252}
   mFoeGoal: {fileID: 1344316272}
   mHomeGoal: {fileID: 1208785461}
-  mDefendDistance: 25
-  mSprintDistance: 8
+  mDefendDistance: 15
+  mSprintDistance: 10
 --- !u!143 &144314257
 CharacterController:
   m_ObjectHideFlags: 0
@@ -842,7 +842,7 @@ MonoBehaviour:
   mFoeGoal: {fileID: 1208785461}
   mHomeGoal: {fileID: 1344316272}
   mDefendDistance: 15
-  mSprintDistance: 6
+  mSprintDistance: 10
 --- !u!143 &199149228
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1222,9 +1222,9 @@ MeshRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 404551545}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_Enabled: 0
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -1552,8 +1552,8 @@ MonoBehaviour:
   mBall: {fileID: 942791252}
   mFoeGoal: {fileID: 1344316272}
   mHomeGoal: {fileID: 1208785461}
-  mDefendDistance: 40
-  mSprintDistance: 0
+  mDefendDistance: 50
+  mSprintDistance: 15
 --- !u!143 &625187187
 CharacterController:
   m_ObjectHideFlags: 0
@@ -2110,8 +2110,8 @@ MonoBehaviour:
   mBall: {fileID: 942791252}
   mFoeGoal: {fileID: 1344316272}
   mHomeGoal: {fileID: 1208785461}
-  mDefendDistance: 20
-  mSprintDistance: 4
+  mDefendDistance: 10
+  mSprintDistance: 6
 --- !u!143 &846846588
 CharacterController:
   m_ObjectHideFlags: 0
@@ -2243,7 +2243,7 @@ MonoBehaviour:
   mFoeGoal: {fileID: 1344316272}
   mHomeGoal: {fileID: 1208785461}
   mDefendDistance: 6
-  mSprintDistance: 2
+  mSprintDistance: 13
 --- !u!143 &873240990
 CharacterController:
   m_ObjectHideFlags: 0
@@ -2831,7 +2831,7 @@ MonoBehaviour:
   mFoeGoal: {fileID: 1208785461}
   mHomeGoal: {fileID: 1344316272}
   mDefendDistance: 40
-  mSprintDistance: 0
+  mSprintDistance: 10
 --- !u!143 &1048599188
 CharacterController:
   m_ObjectHideFlags: 0
@@ -3024,7 +3024,7 @@ GameObject:
   - 33: {fileID: 1208785464}
   - 65: {fileID: 1208785463}
   - 23: {fileID: 1208785462}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: GoalBlue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3447,9 +3447,9 @@ MeshRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1327352997}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_Enabled: 0
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -3526,9 +3526,9 @@ MeshRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1331799482}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_Enabled: 0
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -3579,7 +3579,7 @@ GameObject:
   - 33: {fileID: 1344316275}
   - 65: {fileID: 1344316274}
   - 23: {fileID: 1344316273}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: GoalRed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3713,7 +3713,7 @@ MonoBehaviour:
   mFoeGoal: {fileID: 1208785461}
   mHomeGoal: {fileID: 1344316272}
   mDefendDistance: 4
-  mSprintDistance: 1
+  mSprintDistance: 15
 --- !u!143 &1451124876
 CharacterController:
   m_ObjectHideFlags: 0
