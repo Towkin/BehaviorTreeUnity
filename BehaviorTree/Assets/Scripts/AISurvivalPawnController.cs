@@ -20,6 +20,9 @@ public class AISurvivalPawnController : SurvivalPawnController<SurvivalPawn> {
     private float mDefendDistance = 10.0f;
     [SerializeField]
     private float mSprintDistance = 4.0f;
+
+    [SerializeField]
+    private bool mRenderTree = false;
     
     void Start () {
         mAimObject = new GameObject(name + " - AimAt");
@@ -93,7 +96,7 @@ public class AISurvivalPawnController : SurvivalPawnController<SurvivalPawn> {
     }
 
     void OnGUI() {
-        if (Input.GetKey(KeyCode.Backspace) && ControlledPawns[0] && ControlledPawns[0].IsAlive) {
+        if (mRenderTree && ControlledPawns[0] && ControlledPawns[0].IsAlive) {
             mAI.RootNode.RenderNode(new Vector2(10, 10));
         }
     }
